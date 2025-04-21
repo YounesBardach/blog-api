@@ -1,0 +1,18 @@
+{
+  "name": "blog-project",
+  "version": "1.0.0",
+  "description": "Blog project with Express backend and React frontends",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "reader-app",
+    "admin-app"
+  ],
+  "scripts": {
+    "start:backend": "cd backend && npm run dev",
+    "start:reader": "cd reader-app && npm start",
+    "start:admin": "cd admin-app && npm start"
+  },
+  "author": "",
+  "license": "ISC"
+} 
