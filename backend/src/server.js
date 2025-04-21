@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import asyncHandler from 'express-async-handler';
+import userRoutes from './routes/userRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +16,9 @@ app.use(express.urlencoded({ extended: false }));
 app.get('/', asyncHandler(async (req, res) => {
   res.json({ message: 'Welcome to the Blog API' });
 }));
+
+// API Routes
+app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
