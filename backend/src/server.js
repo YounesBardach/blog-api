@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import asyncHandler from 'express-async-handler';
 import userRoutes from './routes/userRoutes.js';
+import postRoutes from './routes/postRoutes.js';
+import commentRoutes from './routes/commentRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -19,6 +21,8 @@ app.get('/', asyncHandler(async (req, res) => {
 
 // API Routes
 app.use('/api/users', userRoutes);
+app.use('/api', postRoutes);
+app.use('/api', commentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
