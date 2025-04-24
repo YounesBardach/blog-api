@@ -53,6 +53,19 @@
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Post'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   description: Error message
  */
 
 /**
