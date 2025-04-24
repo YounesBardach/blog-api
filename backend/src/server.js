@@ -19,10 +19,10 @@ app.get('/', asyncHandler(async (req, res) => {
   res.json({ message: 'Welcome to the Blog API' });
 }));
 
-// API Routes
-app.use('/api/users', userRoutes);
-app.use('/api', postRoutes);
-app.use('/api', commentRoutes);
+// Routes
+app.use('/users', userRoutes);
+app.use('/posts', postRoutes);
+app.use('/comments', commentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

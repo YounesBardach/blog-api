@@ -71,7 +71,7 @@ export const getPostById = asyncHandler(async (req, res) => {
 
 // @desc    Create a post
 // @route   POST /api/posts
-// @access  Private/Author
+// @access  Private/Admin
 export const createPost = asyncHandler(async (req, res) => {
   const { title, content, published = false } = req.body;
 
@@ -100,7 +100,7 @@ export const createPost = asyncHandler(async (req, res) => {
 
 // @desc    Update a post
 // @route   PUT /api/posts/:id
-// @access  Private/Author
+// @access  Private/Admin
 export const updatePost = asyncHandler(async (req, res) => {
   const { title, content, published } = req.body;
 
@@ -112,12 +112,6 @@ export const updatePost = asyncHandler(async (req, res) => {
   if (!post) {
     res.status(404);
     throw new Error('Post not found');
-  }
-
-  // Check if user is the author or an admin
-  if (post.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-    res.status(401);
-    throw new Error('Not authorized to update this post');
   }
 
   const updatedPost = await prisma.post.update({
@@ -143,7 +137,7 @@ export const updatePost = asyncHandler(async (req, res) => {
 
 // @desc    Delete a post
 // @route   DELETE /api/posts/:id
-// @access  Private/Author
+// @access  Private/Admin
 export const deletePost = asyncHandler(async (req, res) => {
   const post = await prisma.post.findUnique({
     where: { id: req.params.id },
@@ -153,12 +147,6 @@ export const deletePost = asyncHandler(async (req, res) => {
   if (!post) {
     res.status(404);
     throw new Error('Post not found');
-  }
-
-  // Check if user is the author or an admin
-  if (post.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-    res.status(401);
-    throw new Error('Not authorized to delete this post');
   }
 
   // Delete all comments first due to foreign key constraints

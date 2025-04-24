@@ -58,16 +58,8 @@ export const updateComment = asyncHandler(async (req, res) => {
     throw new Error('Comment not found');
   }
 
-  // Check if user is the author, post author, or an admin
-  const post = await prisma.post.findUnique({
-    where: { id: comment.postId },
-  });
-
-  if (
-    comment.authorId !== req.user.id &&
-    post.authorId !== req.user.id &&
-    req.user.role !== 'ADMIN'
-  ) {
+  // Check if user is the comment author or an admin
+  if (comment.authorId !== req.user.id && req.user.role !== 'ADMIN') {
     res.status(401);
     throw new Error('Not authorized to update this comment');
   }
@@ -103,16 +95,8 @@ export const deleteComment = asyncHandler(async (req, res) => {
     throw new Error('Comment not found');
   }
 
-  // Check if user is the author, post author, or an admin
-  const post = await prisma.post.findUnique({
-    where: { id: comment.postId },
-  });
-
-  if (
-    comment.authorId !== req.user.id &&
-    post.authorId !== req.user.id &&
-    req.user.role !== 'ADMIN'
-  ) {
+  // Check if user is the comment author or an admin
+  if (comment.authorId !== req.user.id && req.user.role !== 'ADMIN') {
     res.status(401);
     throw new Error('Not authorized to delete this comment');
   }

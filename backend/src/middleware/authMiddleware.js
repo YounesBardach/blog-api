@@ -49,14 +49,4 @@ export const admin = (req, res, next) => {
     res.status(401);
     throw new Error('Not authorized as an admin');
   }
-};
-
-// Middleware to check if user is author
-export const author = (req, res, next) => {
-  if (req.user && (req.user.role === 'ADMIN' || req.user.role === 'AUTHOR')) {
-    next();
-  } else {
-    res.status(401);
-    throw new Error('Not authorized as an author');
-  }
 }; 

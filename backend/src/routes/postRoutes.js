@@ -6,7 +6,7 @@ import {
   updatePost,
   deletePost,
 } from '../controllers/postController.js';
-import { protect, author } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -14,9 +14,9 @@ const router = express.Router();
 router.get('/', getPosts);
 router.get('/:id', getPostById);
 
-// Protected routes
-router.post('/', protect, author, createPost);
-router.put('/:id', protect, author, updatePost);
-router.delete('/:id', protect, author, deletePost);
+// Protected routes (admin only)
+router.post('/', protect, admin, createPost);
+router.put('/:id', protect, admin, updatePost);
+router.delete('/:id', protect, admin, deletePost);
 
 export default router; 

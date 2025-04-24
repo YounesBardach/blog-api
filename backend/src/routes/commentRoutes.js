@@ -10,11 +10,11 @@ import { protect } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 // Public routes
-router.get('/posts/:postId/comments', getPostComments);
+router.get('/post/:postId', getPostComments);
 
 // Protected routes
-router.post('/posts/:postId/comments', protect, createComment);
-router.put('/comments/:id', protect, updateComment);
-router.delete('/comments/:id', protect, deleteComment);
+router.post('/post/:postId', protect, createComment);
+router.put('/:id', protect, updateComment);
+router.delete('/:id', protect, deleteComment);
 
 export default router; 
