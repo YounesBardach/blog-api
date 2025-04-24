@@ -13,13 +13,13 @@
  *           description: The auto-generated id of the comment
  *         content:
  *           type: string
- *           description: The comment content
+ *           description: The content of the comment
  *         postId:
  *           type: string
  *           description: The ID of the post this comment belongs to
- *         authorId:
+ *         userId:
  *           type: string
- *           description: The ID of the comment author
+ *           description: The ID of the user who created the comment
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -32,50 +32,41 @@
 
 /**
  * @swagger
- * /posts/{postId}/comments:
+ * /comments/post/{postId}:
  *   get:
  *     summary: Get all comments for a post
  *     tags: [Comments]
  *     parameters:
  *       - in: path
  *         name: postId
- *         required: true
  *         schema:
  *           type: string
- *         description: Post ID
+ *         required: true
+ *         description: The post id
  *     responses:
  *       200:
  *         description: List of comments for the post
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 comments:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Comment'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Comment'
  *       404:
  *         description: Post not found
- */
-
-/**
- * @swagger
- * /posts/{postId}/comments:
+ * 
  *   post:
- *     summary: Create a new comment on a post
+ *     summary: Create a new comment
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: postId
- *         required: true
  *         schema:
  *           type: string
- *         description: Post ID
+ *         required: true
+ *         description: The post id
  *     requestBody:
  *       required: true
  *       content:
@@ -87,29 +78,22 @@
  *             properties:
  *               content:
  *                 type: string
+ *                 description: The content of the comment
  *     responses:
  *       201:
  *         description: Comment created successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 comment:
- *                   $ref: '#/components/schemas/Comment'
+ *               $ref: '#/components/schemas/Comment'
  *       400:
- *         description: Invalid input format
+ *         description: Invalid input
  *       401:
- *         description: Not authenticated
+ *         description: Unauthorized
  *       404:
  *         description: Post not found
- */
-
-/**
- * @swagger
- * /posts/{postId}/comments/{commentId}:
+ * 
+ * /comments/{id}:
  *   put:
  *     summary: Update a comment
  *     tags: [Comments]
@@ -117,17 +101,11 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: postId
- *         required: true
+ *         name: id
  *         schema:
  *           type: string
- *         description: Post ID
- *       - in: path
- *         name: commentId
  *         required: true
- *         schema:
- *           type: string
- *         description: Comment ID
+ *         description: The comment id
  *     requestBody:
  *       required: true
  *       content:
@@ -139,31 +117,21 @@
  *             properties:
  *               content:
  *                 type: string
+ *                 description: The updated content of the comment
  *     responses:
  *       200:
  *         description: Comment updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 comment:
- *                   $ref: '#/components/schemas/Comment'
+ *               $ref: '#/components/schemas/Comment'
  *       400:
- *         description: Invalid input format
+ *         description: Invalid input
  *       401:
- *         description: Not authenticated
- *       403:
- *         description: Not authorized to update this comment
+ *         description: Unauthorized
  *       404:
  *         description: Comment not found
- */
-
-/**
- * @swagger
- * /posts/{postId}/comments/{commentId}:
+ * 
  *   delete:
  *     summary: Delete a comment
  *     tags: [Comments]
@@ -171,33 +139,16 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: postId
- *         required: true
+ *         name: id
  *         schema:
  *           type: string
- *         description: Post ID
- *       - in: path
- *         name: commentId
  *         required: true
- *         schema:
- *           type: string
- *         description: Comment ID
+ *         description: The comment id
  *     responses:
  *       200:
  *         description: Comment deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
  *       401:
- *         description: Not authenticated
- *       403:
- *         description: Not authorized to delete this comment
+ *         description: Unauthorized
  *       404:
  *         description: Comment not found
  */ 
