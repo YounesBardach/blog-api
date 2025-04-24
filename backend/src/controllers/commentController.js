@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma.js';
 import asyncHandler from 'express-async-handler';
-
-const prisma = new PrismaClient();
 
 // @desc    Create a comment
 // @route   POST /api/posts/:postId/comments
