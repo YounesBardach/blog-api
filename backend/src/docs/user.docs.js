@@ -1,8 +1,3 @@
-import prisma from '../config/prisma.js';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import AppError from '../utils/AppError.js';
-
 /**
  * @swagger
  * components:
@@ -80,57 +75,6 @@ import AppError from '../utils/AppError.js';
  *       400:
  *         description: Invalid input or user already exists
  */
-export const registerUser = async (req, res, next) => {
-  try {
-    const { name, email, username, password } = req.body;
-
-    // Check if user already exists
-    const userExists = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          { username }
-        ]
-      }
-    });
-
-    if (userExists) {
-      throw new AppError('User already exists with this email or username', 400);
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        username,
-        passwordHash,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('Invalid user data', 400);
-    }
-
-    res.status(201).json({
-      success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
-      token: generateToken(user.id),
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * @swagger
@@ -170,34 +114,6 @@ export const registerUser = async (req, res, next) => {
  *       401:
  *         description: Invalid credentials
  */
-export const loginUser = async (req, res, next) => {
-  try {
-    const { username, password } = req.body;
-
-    // Check for user by username
-    const user = await prisma.user.findUnique({
-      where: { username },
-    });
-
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      throw new AppError('Invalid credentials', 401);
-    }
-
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
-      token: generateToken(user.id),
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * @swagger
@@ -223,37 +139,4 @@ export const loginUser = async (req, res, next) => {
  *         description: Not authenticated
  *       404:
  *         description: User not found
- */
-export const getUserProfile = async (req, res, next) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        username: true,
-        role: true,
-        createdAt: true,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-
-    res.json({
-      success: true,
-      user
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '30d',
-  });
-}; 
+ */ 

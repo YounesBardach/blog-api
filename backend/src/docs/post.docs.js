@@ -1,6 +1,3 @@
-import prisma from '../config/prisma.js';
-import AppError from '../utils/AppError.js';
-
 /**
  * @swagger
  * components:
@@ -57,55 +54,20 @@ import AppError from '../utils/AppError.js';
  *                   items:
  *                     $ref: '#/components/schemas/Post'
  */
-export const getPosts = async (req, res, next) => {
-  try {
-    const posts = await prisma.post.findMany({
-      where: { published: true },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-        comments: {
-          include: {
-            author: {
-              select: {
-                id: true,
-                name: true,
-                username: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    res.json({
-      success: true,
-      posts
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * @swagger
  * /posts/{id}:
  *   get:
- *     summary: Get a single post by ID
+ *     summary: Get a post by ID
  *     tags: [Posts]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The post ID
+ *         description: Post ID
  *     responses:
  *       200:
  *         description: Post details
@@ -121,44 +83,6 @@ export const getPosts = async (req, res, next) => {
  *       404:
  *         description: Post not found
  */
-export const getPostById = async (req, res, next) => {
-  try {
-    const post = await prisma.post.findUnique({
-      where: { id: req.params.id },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-        comments: {
-          include: {
-            author: {
-              select: {
-                id: true,
-                name: true,
-                username: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!post) {
-      throw new AppError('Post not found', 404);
-    }
-
-    res.json({
-      success: true,
-      post
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * @swagger
@@ -184,7 +108,6 @@ export const getPostById = async (req, res, next) => {
  *                 type: string
  *               published:
  *                 type: boolean
- *                 default: false
  *     responses:
  *       201:
  *         description: Post created successfully
@@ -200,38 +123,6 @@ export const getPostById = async (req, res, next) => {
  *       401:
  *         description: Not authenticated
  */
-export const createPost = async (req, res, next) => {
-  try {
-    const { title, content, published = false } = req.body;
-
-    const post = await prisma.post.create({
-      data: {
-        title,
-        content,
-        published,
-        author: {
-          connect: { id: req.user.id },
-        },
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-      },
-    });
-
-    res.status(201).json({
-      success: true,
-      post
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * @swagger
@@ -244,10 +135,10 @@ export const createPost = async (req, res, next) => {
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The post ID
+ *         description: Post ID
  *     requestBody:
  *       required: true
  *       content:
@@ -280,50 +171,6 @@ export const createPost = async (req, res, next) => {
  *       404:
  *         description: Post not found
  */
-export const updatePost = async (req, res, next) => {
-  try {
-    const { title, content, published } = req.body;
-
-    const post = await prisma.post.findUnique({
-      where: { id: req.params.id },
-      include: { author: true },
-    });
-
-    if (!post) {
-      throw new AppError('Post not found', 404);
-    }
-
-    // Check if user is the author or an admin
-    if (post.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-      throw new AppError('Not authorized to update this post', 403);
-    }
-
-    const updatedPost = await prisma.post.update({
-      where: { id: req.params.id },
-      data: {
-        title,
-        content,
-        published,
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-      },
-    });
-
-    res.json({
-      success: true,
-      post: updatedPost
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * @swagger
@@ -336,10 +183,10 @@ export const updatePost = async (req, res, next) => {
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The post ID
+ *         description: Post ID
  *     responses:
  *       200:
  *         description: Post deleted successfully
@@ -358,37 +205,4 @@ export const updatePost = async (req, res, next) => {
  *         description: Not authorized to delete this post
  *       404:
  *         description: Post not found
- */
-export const deletePost = async (req, res, next) => {
-  try {
-    const post = await prisma.post.findUnique({
-      where: { id: req.params.id },
-      include: { author: true },
-    });
-
-    if (!post) {
-      throw new AppError('Post not found', 404);
-    }
-
-    // Check if user is the author or an admin
-    if (post.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-      throw new AppError('Not authorized to delete this post', 403);
-    }
-
-    // Delete all comments first due to foreign key constraints
-    await prisma.comment.deleteMany({
-      where: { postId: req.params.id },
-    });
-
-    await prisma.post.delete({
-      where: { id: req.params.id },
-    });
-
-    res.json({
-      success: true,
-      message: 'Post removed'
-    });
-  } catch (error) {
-    next(error);
-  }
-}; 
+ */ 
