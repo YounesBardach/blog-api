@@ -31,7 +31,10 @@ const options = {
       bearerAuth: []
     }]
   },
-  apis: ['./src/routes/*.js', './src/controllers/*.js'] // Path to the API routes and controllers
+  apis: [
+    './src/routes/*.js',
+    './src/docs/*.js'  // Path to the Swagger documentation files
+  ]
 };
 
 const specs = swaggerJsdoc(options);
