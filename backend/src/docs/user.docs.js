@@ -73,7 +73,9 @@
  *                 token:
  *                   type: string
  *       400:
- *         description: Invalid input or user already exists
+ *         description: Invalid input format
+ *       409:
+ *         description: Email or username already exists
  */
 
 /**
@@ -111,6 +113,8 @@
  *                   $ref: '#/components/schemas/User'
  *                 token:
  *                   type: string
+ *       400:
+ *         description: Invalid input format
  *       401:
  *         description: Invalid credentials
  */

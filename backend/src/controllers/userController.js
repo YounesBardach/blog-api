@@ -3,83 +3,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import AppError from '../utils/AppError.js';
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       required:
- *         - name
- *         - email
- *         - username
- *         - password
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the user
- *         name:
- *           type: string
- *           description: The user's full name
- *         email:
- *           type: string
- *           description: The user's email address
- *         username:
- *           type: string
- *           description: The user's username
- *         role:
- *           type: string
- *           description: The user's role (USER or ADMIN)
- *         createdAt:
- *           type: string
- *           format: date-time
- *           description: The date the user was created
- */
-
-/**
- * @swagger
- * /users/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - username
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               username:
- *                 type: string
- *               password:
- *                 type: string
- *                 format: password
- *     responses:
- *       201:
- *         description: User successfully registered
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 token:
- *                   type: string
- *       400:
- *         description: Invalid input or user already exists
- */
 export const registerUser = async (req, res, next) => {
   try {
     const { name, email, username, password } = req.body;
@@ -118,58 +41,14 @@ export const registerUser = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
-      token: generateToken(user.id),
+      user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role },
+      token: generateToken(user.id)
     });
   } catch (error) {
     next(error);
   }
 };
 
-/**
- * @swagger
- * /users/login:
- *   post:
- *     summary: Login a user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - username
- *               - password
- *             properties:
- *               username:
- *                 type: string
- *               password:
- *                 type: string
- *                 format: password
- *     responses:
- *       200:
- *         description: User successfully logged in
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 token:
- *                   type: string
- *       401:
- *         description: Invalid credentials
- */
 export const loginUser = async (req, res, next) => {
   try {
     const { username, password } = req.body;
@@ -185,45 +64,14 @@ export const loginUser = async (req, res, next) => {
 
     res.json({
       success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
-      token: generateToken(user.id),
+      user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role },
+      token: generateToken(user.id)
     });
   } catch (error) {
     next(error);
   }
 };
 
-/**
- * @swagger
- * /users/profile:
- *   get:
- *     summary: Get current user profile
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *       401:
- *         description: Not authenticated
- *       404:
- *         description: User not found
- */
 export const getUserProfile = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({

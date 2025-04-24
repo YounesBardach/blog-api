@@ -120,6 +120,8 @@
  *                   type: boolean
  *                 post:
  *                   $ref: '#/components/schemas/Post'
+ *       400:
+ *         description: Invalid input format
  *       401:
  *         description: Not authenticated
  */
@@ -164,6 +166,8 @@
  *                   type: boolean
  *                 post:
  *                   $ref: '#/components/schemas/Post'
+ *       400:
+ *         description: Invalid input format
  *       401:
  *         description: Not authenticated
  *       403:

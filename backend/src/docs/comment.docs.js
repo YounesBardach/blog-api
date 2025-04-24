@@ -99,6 +99,8 @@
  *                   type: boolean
  *                 comment:
  *                   $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: Invalid input format
  *       401:
  *         description: Not authenticated
  *       404:
@@ -149,6 +151,8 @@
  *                   type: boolean
  *                 comment:
  *                   $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: Invalid input format
  *       401:
  *         description: Not authenticated
  *       403:
