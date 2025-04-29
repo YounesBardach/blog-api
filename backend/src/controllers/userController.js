@@ -39,10 +39,20 @@ export const registerUser = async (req, res, next) => {
       throw new AppError('Invalid user data', 400);
     }
 
+    // Generate JWT token
+    const token = generateToken(user.id);
+
+    // Set HTTP-only cookie with JWT token
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
+
     res.status(201).json({
       success: true,
-      user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role },
-      token: generateToken(user.id)
+      user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role }
     });
   } catch (error) {
     next(error);
@@ -62,14 +72,32 @@ export const loginUser = async (req, res, next) => {
       throw new AppError('Invalid credentials', 401);
     }
 
+    // Generate JWT token
+    const token = generateToken(user.id);
+
+    // Set HTTP-only cookie with JWT token
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
+
     res.json({
       success: true,
-      user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role },
-      token: generateToken(user.id)
+      user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role }
     });
   } catch (error) {
     next(error);
   }
+};
+
+export const logoutUser = async (req, res) => {
+  res.cookie('jwt', '', {
+    httpOnly: true,
+    expires: new Date(0)
+  });
+  res.json({ success: true, message: 'Logged out successfully' });
 };
 
 export const getUserProfile = async (req, res, next) => {
