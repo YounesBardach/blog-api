@@ -16,17 +16,17 @@ dotenv.config();
 
 const app = express();
 
-// Enable CORS with credentials
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'], // Add your frontend URLs
-  credentials: true
-}));
-
 // Parse JSON bodies
 app.use(express.json());
 
 // Parse cookies
 app.use(cookieParser());
+
+// Enable CORS with credentials
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174'], // Add your frontend URLs
+  credentials: true
+}));
 
 // CSRF protection
 const csrfProtection = csrf({ 
@@ -40,20 +40,20 @@ const csrfProtection = csrf({
 // Apply CSRF protection to all routes except GET requests
 app.use((req, res, next) => {
   if (req.method === 'GET') {
-    next();
+    // Initialize CSRF protection for GET requests
+    csrfProtection(req, res, () => {
+      // Add CSRF token to response
+      res.cookie('XSRF-TOKEN', req.csrfToken(), {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
+      next();
+    });
   } else {
+    // Apply CSRF protection for non-GET requests
     csrfProtection(req, res, next);
   }
-});
-
-// Add CSRF token to response
-app.use((req, res, next) => {
-  res.cookie('XSRF-TOKEN', req.csrfToken(), {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-  });
-  next();
 });
 
 // Routes
