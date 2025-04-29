@@ -6,7 +6,7 @@ import postRoutes from './routes/postRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import errorHandler from './middleware/errorMiddleware.js';
 import swaggerUi from 'swagger-ui-express';
-import specs from './config/swagger.js';
+import specs, { swaggerUiOptions } from './config/swagger.js';
 import cookieParser from 'cookie-parser';
 import csrf from 'csurf';
 import cors from 'cors';
@@ -24,25 +24,55 @@ app.use(cookieParser());
 
 // Enable CORS with credentials
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'], // Add your frontend URLs
-  credentials: true
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // CSRF protection
 const csrfProtection = csrf({ 
   cookie: {
-    httpOnly: true,
+    httpOnly: false,  // Allow Swagger UI to access the cookie
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict'
   }
 });
 
-// Apply CSRF protection to all routes except GET requests
+// Route to get CSRF token
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
+  const token = req.csrfToken();
+  res.cookie('XSRF-TOKEN', token, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+  res.status(204).end();
+});
+
+// Middleware to automatically set X-XSRF-TOKEN header from cookie
 app.use((req, res, next) => {
-  if (req.method === 'GET') {
-    // Initialize CSRF protection for GET requests
+  if (!req.headers['x-xsrf-token']) {
+    const csrfToken = req.cookies['XSRF-TOKEN'];
+    if (csrfToken) {
+      req.headers['x-xsrf-token'] = csrfToken;
+    }
+  }
+  next();
+});
+
+// Apply CSRF protection based on HTTP method
+app.use((req, res, next) => {
+  const stateChangingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+  
+  if (stateChangingMethods.includes(req.method)) {
+    // Apply CSRF protection for state-changing methods
+    return csrfProtection(req, res, next);
+  } else if (req.method === 'GET') {
+    // Initialize CSRF protection for GET requests to ensure token availability
     csrfProtection(req, res, () => {
-      // Add CSRF token to response
       res.cookie('XSRF-TOKEN', req.csrfToken(), {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
@@ -51,8 +81,8 @@ app.use((req, res, next) => {
       next();
     });
   } else {
-    // Apply CSRF protection for non-GET requests
-    csrfProtection(req, res, next);
+    // Skip CSRF for OPTIONS and other methods
+    next();
   }
 });
 
@@ -67,7 +97,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 
 // Swagger documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
 
 // Error handling middleware
 app.use(errorHandler);

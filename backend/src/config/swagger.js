@@ -6,7 +6,13 @@ const options = {
     info: {
       title: 'Blog API Documentation',
       version: '1.0.0',
-      description: 'API documentation for the Blog application',
+      description: `API documentation for the Blog application
+
+## Authentication
+This API uses CSRF protection. Before making any non-GET requests:
+1. First make a GET request to /api/csrf-token to obtain a CSRF token
+2. The token will be automatically set as a cookie and used in subsequent requests
+3. The Swagger UI will automatically handle the CSRF token for you`,
       contact: {
         name: 'API Support',
         email: 'support@example.com'
@@ -14,32 +20,20 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000/api',
+        url: 'http://localhost:5000',
         description: 'Development server'
       }
     ],
     components: {
       securitySchemes: {
-        cookieAuth: {
-          type: 'apiKey',
-          in: 'cookie',
-          name: 'jwt',
-          description: 'JWT token stored in HTTP-only cookie'
-        },
         csrfToken: {
           type: 'apiKey',
           in: 'header',
           name: 'X-XSRF-TOKEN',
-          description: 'CSRF token for POST, PUT, DELETE requests'
+          description: 'CSRF Token obtained from /api/csrf-token endpoint'
         }
       }
-    },
-    security: [
-      {
-        cookieAuth: [],
-        csrfToken: []
-      }
-    ]
+    }
   },
   apis: [
     './src/routes/*.js',
@@ -48,5 +42,24 @@ const options = {
 };
 
 const specs = swaggerJsdoc(options);
+
+// Swagger UI configuration
+export const swaggerUiOptions = {
+  swaggerOptions: {
+    requestInterceptor: function(req) {
+      // The cookie will be automatically included by the browser
+      // We just need to set the header if the cookie exists
+      const csrfToken = req.cookies?.['XSRF-TOKEN'];
+      if (csrfToken) {
+        req.headers['X-XSRF-TOKEN'] = csrfToken;
+      }
+      return req;
+    },
+    withCredentials: true,
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    tryItOutEnabled: true
+  }
+};
 
 export default specs; 

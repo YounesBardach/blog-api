@@ -42,13 +42,17 @@ export const registerUser = async (req, res, next) => {
     // Generate JWT token
     const token = generateToken(user.id);
 
-    // Set HTTP-only cookie with JWT token
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-    });
+    try {
+      // Set HTTP-only cookie with JWT token
+      res.cookie('jwt', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      });
+    } catch (cookieError) {
+      throw new AppError('Failed to set authentication cookie', 500);
+    }
 
     res.status(201).json({
       success: true,
@@ -75,13 +79,17 @@ export const loginUser = async (req, res, next) => {
     // Generate JWT token
     const token = generateToken(user.id);
 
-    // Set HTTP-only cookie with JWT token
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-    });
+    try {
+      // Set HTTP-only cookie with JWT token
+      res.cookie('jwt', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      });
+    } catch (cookieError) {
+      throw new AppError('Failed to set authentication cookie', 500);
+    }
 
     res.json({
       success: true,
@@ -92,12 +100,23 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
-export const logoutUser = async (req, res) => {
-  res.cookie('jwt', '', {
-    httpOnly: true,
-    expires: new Date(0)
-  });
-  res.json({ success: true, message: 'Logged out successfully' });
+export const logoutUser = async (req, res, next) => {
+  try {
+    // Clear the JWT cookie
+    res.cookie('jwt', '', {
+      httpOnly: true,
+      expires: new Date(0),
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Logged out successfully' 
+    });
+  } catch (error) {
+    next(new AppError('Failed to clear authentication cookie', 500));
+  }
 };
 
 export const getUserProfile = async (req, res, next) => {
