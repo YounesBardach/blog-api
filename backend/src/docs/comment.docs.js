@@ -32,7 +32,7 @@
 
 /**
  * @swagger
- * /comments/post/{postId}:
+ * /api/comments/post/{postId}:
  *   get:
  *     summary: Get all comments for a post
  *     tags: [Comments]
@@ -59,7 +59,8 @@
  *     summary: Create a new comment
  *     tags: [Comments]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
+ *       - csrfToken: []
  *     parameters:
  *       - in: path
  *         name: postId
@@ -93,12 +94,13 @@
  *       404:
  *         description: Post not found
  * 
- * /comments/{id}:
+ * /api/comments/{id}:
  *   put:
  *     summary: Update a comment
  *     tags: [Comments]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
+ *       - csrfToken: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -136,7 +138,8 @@
  *     summary: Delete a comment
  *     tags: [Comments]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
+ *       - csrfToken: []
  *     parameters:
  *       - in: path
  *         name: id

@@ -35,7 +35,7 @@
 
 /**
  * @swagger
- * /posts:
+ * /api/posts:
  *   get:
  *     summary: Get all published posts
  *     tags: [Posts]
@@ -70,7 +70,7 @@
 
 /**
  * @swagger
- * /posts/{id}:
+ * /api/posts/{id}:
  *   get:
  *     summary: Get a post by ID
  *     tags: [Posts]
@@ -99,12 +99,13 @@
 
 /**
  * @swagger
- * /posts:
+ * /api/posts:
  *   post:
  *     summary: Create a new post
  *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
+ *       - csrfToken: []
  *     requestBody:
  *       required: true
  *       content:
@@ -183,12 +184,13 @@
 
 /**
  * @swagger
- * /posts/{id}:
+ * /api/posts/{id}:
  *   put:
  *     summary: Update a post
  *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
+ *       - csrfToken: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -233,12 +235,13 @@
 
 /**
  * @swagger
- * /posts/{id}:
+ * /api/posts/{id}:
  *   delete:
  *     summary: Delete a post
  *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
+ *       - csrfToken: []
  *     parameters:
  *       - in: path
  *         name: id

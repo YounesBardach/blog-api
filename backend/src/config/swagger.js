@@ -14,22 +14,32 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
+        url: 'http://localhost:3000/api',
         description: 'Development server'
       }
     ],
     components: {
       securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
+        cookieAuth: {
+          type: 'apiKey',
+          in: 'cookie',
+          name: 'jwt',
+          description: 'JWT token stored in HTTP-only cookie'
+        },
+        csrfToken: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-XSRF-TOKEN',
+          description: 'CSRF token for POST, PUT, DELETE requests'
         }
       }
     },
-    security: [{
-      bearerAuth: []
-    }]
+    security: [
+      {
+        cookieAuth: [],
+        csrfToken: []
+      }
+    ]
   },
   apis: [
     './src/routes/*.js',

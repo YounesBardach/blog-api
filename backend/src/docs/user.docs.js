@@ -33,7 +33,7 @@
 
 /**
  * @swagger
- * /users/register:
+ * /api/users/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Users]
@@ -70,8 +70,11 @@
  *                   type: boolean
  *                 user:
  *                   $ref: '#/components/schemas/User'
- *                 token:
- *                   type: string
+ *         headers:
+ *           Set-Cookie:
+ *             schema:
+ *               type: string
+ *               description: JWT token in HTTP-only cookie
  *       400:
  *         description: Invalid input format
  *       409:
@@ -80,7 +83,7 @@
 
 /**
  * @swagger
- * /users/login:
+ * /api/users/login:
  *   post:
  *     summary: Login a user
  *     tags: [Users]
@@ -111,8 +114,11 @@
  *                   type: boolean
  *                 user:
  *                   $ref: '#/components/schemas/User'
- *                 token:
- *                   type: string
+ *         headers:
+ *           Set-Cookie:
+ *             schema:
+ *               type: string
+ *               description: JWT token in HTTP-only cookie
  *       400:
  *         description: Invalid input format
  *       401:
@@ -121,12 +127,40 @@
 
 /**
  * @swagger
- * /users/profile:
+ * /api/users/logout:
+ *   post:
+ *     summary: Logout current user
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *       - csrfToken: []
+ *     responses:
+ *       200:
+ *         description: User successfully logged out
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *         headers:
+ *           Set-Cookie:
+ *             schema:
+ *               type: string
+ *               description: Clears the JWT cookie
+ */
+
+/**
+ * @swagger
+ * /api/users/profile:
  *   get:
  *     summary: Get current user profile
  *     tags: [Users]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: User profile retrieved successfully
