@@ -11,7 +11,7 @@ export const Login = () => {
     e.preventDefault();
     try {
       await login(username, password);
-    } catch (err) {
+    } catch {
       setError('Invalid username or password');
     }
   };

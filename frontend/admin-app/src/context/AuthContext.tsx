@@ -1,18 +1,19 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { jwtDecode } from 'jwt-decode';
 
 interface User {
   id: string;
   email: string;
+  name: string;
+  username: string;
   role: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -24,33 +25,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    const checkAuth = async () => {
       try {
-        const decoded = jwtDecode<User>(token);
-        setUser(decoded);
+        const response = await api.get('/users/profile');
+        setUser(response.data.user);
         setIsAuthenticated(true);
       } catch {
-        localStorage.removeItem('token');
+        setUser(null);
+        setIsAuthenticated(false);
       }
-    }
+    };
+
+    checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { email, password });
-    const { token } = response.data;
-    localStorage.setItem('token', token);
-    const decoded = jwtDecode<User>(token);
-    setUser(decoded);
-    setIsAuthenticated(true);
-    navigate('/');
+  const login = async (username: string, password: string) => {
+    try {
+      const response = await api.post('/users/login', { username, password });
+      setUser(response.data.user);
+      setIsAuthenticated(true);
+      navigate('/');
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setIsAuthenticated(false);
-    navigate('/login');
+  const logout = async () => {
+    try {
+      await api.post('/users/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      navigate('/login');
+    }
   };
 
   return (

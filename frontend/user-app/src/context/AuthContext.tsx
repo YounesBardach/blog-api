@@ -5,9 +5,9 @@ import api from '../services/api';
 interface User {
   id: string;
   email: string;
-  role: string;
   name: string;
   username: string;
+  role: string;
 }
 
 interface AuthContextType {
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const response = await api.get('/users/profile');
         setUser(response.data.user);
         setIsAuthenticated(true);
-      } catch (error) {
+      } catch {
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -40,10 +40,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (username: string, password: string) => {
-    const response = await api.post('/users/login', { username, password });
-    setUser(response.data.user);
-    setIsAuthenticated(true);
-    navigate('/');
+    try {
+      const response = await api.post('/users/login', { username, password });
+      setUser(response.data.user);
+      setIsAuthenticated(true);
+      navigate('/');
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   };
 
   const logout = async () => {
