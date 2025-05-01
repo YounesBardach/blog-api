@@ -1,20 +1,29 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { AxiosError } from 'axios';
 
 interface User {
   id: string;
-  email: string;
   name: string;
+  email: string;
   username: string;
   role: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  isAuthenticated: boolean;
+}
+
+interface ApiErrorResponse {
+  status: string;
+  message: string;
+  errors?: Record<string, string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,9 +39,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const response = await api.get('/users/profile');
         setUser(response.data.user);
         setIsAuthenticated(true);
-      } catch {
-        setUser(null);
-        setIsAuthenticated(false);
+      } catch (error) {
+        const axiosError = error as AxiosError<ApiErrorResponse>;
+        if (axiosError.response?.data?.status === 'fail') {
+          setUser(null);
+          setIsAuthenticated(false);
+        } else {
+          console.error('Auth check error:', error);
+        }
       }
     };
 
@@ -46,8 +60,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(true);
       navigate('/');
     } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      if (axiosError.response?.data?.status === 'fail') {
+        throw new Error(axiosError.response.data.message || 'Login failed');
+      }
+      throw new Error('An unexpected error occurred during login');
     }
   };
 
@@ -55,7 +72,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await api.post('/users/logout');
     } catch (error) {
-      console.error('Logout error:', error);
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      console.error('Logout error:', axiosError);
     } finally {
       setUser(null);
       setIsAuthenticated(false);
