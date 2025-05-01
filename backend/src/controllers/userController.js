@@ -18,7 +18,13 @@ export const registerUser = async (req, res, next) => {
     });
 
     if (userExists) {
-      throw new AppError('User already exists with this email or username', 400);
+      throw new AppError('User already exists with this email or username', 400, {
+        fields: {
+          email: userExists.email === email ? 'Email already in use' : null,
+          username: userExists.username === username ? 'Username already taken' : null
+        },
+        code: 'DUPLICATE_ENTRY'
+      });
     }
 
     // Hash password
@@ -36,7 +42,15 @@ export const registerUser = async (req, res, next) => {
     });
 
     if (!user) {
-      throw new AppError('Invalid user data', 400);
+      throw new AppError('Invalid user data', 400, {
+        fields: {
+          name: 'Name is required',
+          email: 'Valid email is required',
+          username: 'Username is required',
+          password: 'Password is required'
+        },
+        code: 'INVALID_DATA'
+      });
     }
 
     // Generate JWT token
@@ -51,7 +65,11 @@ export const registerUser = async (req, res, next) => {
         maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
       });
     } catch (cookieError) {
-      throw new AppError('Failed to set authentication cookie', 500);
+      throw new AppError('Failed to set authentication cookie', 500, {
+        operation: 'set_cookie',
+        code: 'COOKIE_ERROR',
+        details: cookieError.message
+      });
     }
 
     res.status(201).json({
@@ -73,7 +91,10 @@ export const loginUser = async (req, res, next) => {
     });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      throw new AppError('Invalid credentials', 401);
+      throw new AppError('Invalid credentials', 401, {
+        field: 'credentials',
+        code: 'INVALID_CREDENTIALS'
+      });
     }
 
     // Generate JWT token
@@ -88,7 +109,11 @@ export const loginUser = async (req, res, next) => {
         maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
       });
     } catch (cookieError) {
-      throw new AppError('Failed to set authentication cookie', 500);
+      throw new AppError('Failed to set authentication cookie', 500, {
+        operation: 'set_cookie',
+        code: 'COOKIE_ERROR',
+        details: cookieError.message
+      });
     }
 
     res.json({
@@ -115,7 +140,11 @@ export const logoutUser = async (req, res, next) => {
       message: 'Logged out successfully' 
     });
   } catch (error) {
-    next(new AppError('Failed to clear authentication cookie', 500));
+    next(new AppError('Failed to clear authentication cookie', 500, {
+      operation: 'clear_cookie',
+      code: 'COOKIE_ERROR',
+      details: error.message
+    }));
   }
 };
 
@@ -134,7 +163,11 @@ export const getUserProfile = async (req, res, next) => {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError('User not found', 404, {
+        resource: 'user',
+        id: req.user.id,
+        code: 'RESOURCE_NOT_FOUND'
+      });
     }
 
     res.json({

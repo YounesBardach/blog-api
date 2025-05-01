@@ -10,7 +10,11 @@ export const protect = asyncHandler(async (req, res, next) => {
   token = req.cookies.jwt;
 
   if (!token) {
-    return next(new AppError('Not authorized, no token', 401));
+    return next(new AppError('Not authorized, no token', 401, {
+      code: 'MISSING_TOKEN',
+      field: 'authorization',
+      details: 'No JWT token found in cookies'
+    }));
   }
 
   try {
@@ -31,7 +35,11 @@ export const protect = asyncHandler(async (req, res, next) => {
 
     next();
   } catch (error) {
-    return next(new AppError('Not authorized, token failed', 401));
+    return next(new AppError('Not authorized, token failed', 401, {
+      code: 'INVALID_TOKEN',
+      field: 'authorization',
+      details: error.message
+    }));
   }
 });
 
@@ -40,6 +48,11 @@ export const admin = (req, res, next) => {
   if (req.user && req.user.role === 'ADMIN') {
     next();
   } else {
-    return next(new AppError('Not authorized as an admin', 401));
+    return next(new AppError('Not authorized as an admin', 403, {
+      code: 'UNAUTHORIZED_ACCESS',
+      requiredRole: 'ADMIN',
+      userRole: req.user?.role || 'none',
+      details: 'Admin privileges required for this operation'
+    }));
   }
 }; 

@@ -64,7 +64,11 @@ export const getPostById = async (req, res, next) => {
     });
 
     if (!post) {
-      throw new AppError('Post not found', 404);
+      throw new AppError('Post not found', 404, {
+        resource: 'post',
+        id: req.params.id,
+        code: 'RESOURCE_NOT_FOUND'
+      });
     }
 
     res.json({
@@ -119,12 +123,22 @@ export const updatePost = async (req, res, next) => {
     });
 
     if (!post) {
-      throw new AppError('Post not found', 404);
+      throw new AppError('Post not found', 404, {
+        resource: 'post',
+        id: req.params.id,
+        code: 'RESOURCE_NOT_FOUND'
+      });
     }
 
     // Check if user is the author or an admin
     if (post.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-      throw new AppError('Not authorized to update this post', 403);
+      throw new AppError('Not authorized to update this post', 403, {
+        resource: 'post',
+        id: req.params.id,
+        code: 'UNAUTHORIZED_ACCESS',
+        requiredRole: 'ADMIN',
+        userRole: req.user.role
+      });
     }
 
     const updatedPost = await prisma.post.update({
@@ -162,12 +176,22 @@ export const deletePost = async (req, res, next) => {
     });
 
     if (!post) {
-      throw new AppError('Post not found', 404);
+      throw new AppError('Post not found', 404, {
+        resource: 'post',
+        id: req.params.id,
+        code: 'RESOURCE_NOT_FOUND'
+      });
     }
 
     // Check if user is the author or an admin
     if (post.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-      throw new AppError('Not authorized to delete this post', 403);
+      throw new AppError('Not authorized to delete this post', 403, {
+        resource: 'post',
+        id: req.params.id,
+        code: 'UNAUTHORIZED_ACCESS',
+        requiredRole: 'ADMIN',
+        userRole: req.user.role
+      });
     }
 
     // Delete all comments first due to foreign key constraints

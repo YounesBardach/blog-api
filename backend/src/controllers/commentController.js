@@ -12,7 +12,11 @@ export const createComment = async (req, res, next) => {
     });
 
     if (!post) {
-      throw new AppError('Post not found', 404);
+      throw new AppError('Post not found', 404, {
+        resource: 'post',
+        id: postId,
+        code: 'RESOURCE_NOT_FOUND'
+      });
     }
 
     const comment = await prisma.comment.create({
@@ -55,12 +59,22 @@ export const updateComment = async (req, res, next) => {
     });
 
     if (!comment) {
-      throw new AppError('Comment not found', 404);
+      throw new AppError('Comment not found', 404, {
+        resource: 'comment',
+        id: req.params.id,
+        code: 'RESOURCE_NOT_FOUND'
+      });
     }
 
     // Check if user is the comment author or an admin
     if (comment.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-      throw new AppError('Not authorized to update this comment', 403);
+      throw new AppError('Not authorized to update this comment', 403, {
+        resource: 'comment',
+        id: req.params.id,
+        code: 'UNAUTHORIZED_ACCESS',
+        requiredRole: 'ADMIN',
+        userRole: req.user.role
+      });
     }
 
     const updatedComment = await prisma.comment.update({
@@ -94,12 +108,22 @@ export const deleteComment = async (req, res, next) => {
     });
 
     if (!comment) {
-      throw new AppError('Comment not found', 404);
+      throw new AppError('Comment not found', 404, {
+        resource: 'comment',
+        id: req.params.id,
+        code: 'RESOURCE_NOT_FOUND'
+      });
     }
 
     // Check if user is the comment author or an admin
     if (comment.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-      throw new AppError('Not authorized to delete this comment', 403);
+      throw new AppError('Not authorized to delete this comment', 403, {
+        resource: 'comment',
+        id: req.params.id,
+        code: 'UNAUTHORIZED_ACCESS',
+        requiredRole: 'ADMIN',
+        userRole: req.user.role
+      });
     }
 
     await prisma.comment.delete({
