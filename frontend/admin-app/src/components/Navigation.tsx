@@ -23,18 +23,6 @@ export const Navigation = () => {
                 Dashboard
               </NavLink>
               <NavLink
-                to="/posts"
-                className={({ isActive }) =>
-                  `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive
-                      ? 'border-indigo-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`
-                }
-              >
-                Posts
-              </NavLink>
-              <NavLink
                 to="/users"
                 className={({ isActive }) =>
                   `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
@@ -47,6 +35,18 @@ export const Navigation = () => {
                 Users
               </NavLink>
               <NavLink
+                to="/posts"
+                className={({ isActive }) =>
+                  `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive
+                      ? 'border-indigo-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`
+                }
+              >
+                Posts
+              </NavLink>
+              <NavLink
                 to="/comments"
                 className={({ isActive }) =>
                   `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
@@ -57,18 +57,6 @@ export const Navigation = () => {
                 }
               >
                 Comments
-              </NavLink>
-              <NavLink
-                to="/settings"
-                className={({ isActive }) =>
-                  `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive
-                      ? 'border-indigo-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`
-                }
-              >
-                Settings
               </NavLink>
             </div>
           </div>

@@ -24,8 +24,8 @@ export const Dashboard = () => {
           <p className="mt-2 text-yellow-700">View site statistics and metrics</p>
         </div>
         <div className="bg-red-50 p-6 rounded-lg">
-          <h3 className="text-lg font-medium text-red-900">Settings</h3>
-          <p className="mt-2 text-red-700">Configure site settings and preferences</p>
+          <h3 className="text-lg font-medium text-red-900">Comments</h3>
+          <p className="mt-2 text-red-700">Manage and moderate user comments</p>
         </div>
         <div className="bg-blue-50 p-6 rounded-lg">
           <h3 className="text-lg font-medium text-blue-900">Reports</h3>
