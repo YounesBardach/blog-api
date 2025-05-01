@@ -42,7 +42,8 @@ export const createComment = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      comment
+      status: 'success',
+      data: { comment }
     });
   } catch (error) {
     next(error);
@@ -91,9 +92,10 @@ export const updateComment = async (req, res, next) => {
       },
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      comment: updatedComment
+      status: 'success',
+      data: { comment: updatedComment }
     });
   } catch (error) {
     next(error);
@@ -130,9 +132,10 @@ export const deleteComment = async (req, res, next) => {
       where: { id: req.params.id },
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      message: 'Comment removed'
+      status: 'success',
+      data: { message: 'Comment removed' }
     });
   } catch (error) {
     next(error);
@@ -155,9 +158,10 @@ export const getPostComments = async (req, res, next) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      comments
+      status: 'success',
+      data: { comments }
     });
   } catch (error) {
     next(error);

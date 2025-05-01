@@ -74,7 +74,8 @@ export const registerUser = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role }
+      status: 'success',
+      data: { user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role } }
     });
   } catch (error) {
     next(error);
@@ -116,9 +117,10 @@ export const loginUser = async (req, res, next) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
-      user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role }
+      status: 'success',
+      data: { user: { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role } }
     });
   } catch (error) {
     next(error);
@@ -135,9 +137,10 @@ export const logoutUser = async (req, res, next) => {
       sameSite: 'strict'
     });
 
-    res.json({ 
-      success: true, 
-      message: 'Logged out successfully' 
+    res.status(200).json({
+      success: true,
+      status: 'success',
+      data: { message: 'Logged out successfully' }
     });
   } catch (error) {
     next(new AppError('Failed to clear authentication cookie', 500, {
@@ -170,9 +173,10 @@ export const getUserProfile = async (req, res, next) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
-      user
+      status: 'success',
+      data: { user }
     });
   } catch (error) {
     next(error);

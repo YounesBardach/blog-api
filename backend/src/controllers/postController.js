@@ -28,9 +28,10 @@ export const getPosts = async (req, res, next) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      posts
+      status: 'success',
+      data: { posts }
     });
   } catch (error) {
     next(error);
@@ -71,9 +72,10 @@ export const getPostById = async (req, res, next) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
-      post
+      status: 'success',
+      data: { post }
     });
   } catch (error) {
     next(error);
@@ -106,7 +108,8 @@ export const createPost = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      post
+      status: 'success',
+      data: { post }
     });
   } catch (error) {
     next(error);
@@ -159,9 +162,10 @@ export const updatePost = async (req, res, next) => {
       },
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      post: updatedPost
+      status: 'success',
+      data: { post: updatedPost }
     });
   } catch (error) {
     next(error);
@@ -203,9 +207,10 @@ export const deletePost = async (req, res, next) => {
       where: { id: req.params.id },
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      message: 'Post removed'
+      status: 'success',
+      data: { message: 'Post removed' }
     });
   } catch (error) {
     next(error);
