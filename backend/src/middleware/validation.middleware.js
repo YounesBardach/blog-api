@@ -1,22 +1,54 @@
 import { body, validationResult } from 'express-validator';
 
+// Sanitization helper functions
+const sanitizeUsername = (value) => {
+  if (!value) return value;
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, ''); // Remove special characters
+};
+
+const sanitizePassword = (value) => {
+  if (!value) return value;
+  return value
+    .trim()
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, ''); // Remove control characters
+};
+
+const sanitizeEmail = (value) => {
+  if (!value) return value;
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/javascript:/gi, '') // Remove potential XSS
+    .replace(/data:/gi, '') // Remove potential XSS
+    .replace(/vbscript:/gi, ''); // Remove potential XSS
+};
+
 // Validation middleware for registration
 export const validateRegistration = [
   body('email')
     .isEmail()
     .withMessage('Please provide a valid email')
+    .customSanitizer(sanitizeEmail)
     .normalizeEmail(),
   body('username')
     .isLength({ min: 3 })
     .withMessage('Username must be at least 3 characters long')
-    .trim(),
+    .customSanitizer(sanitizeUsername)
+    .matches(/^[a-z0-9]+$/)
+    .withMessage('Username can only contain lowercase letters and numbers'),
   body('password')
     .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long'),
+    .withMessage('Password must be at least 6 characters long')
+    .customSanitizer(sanitizePassword),
   body('name')
     .notEmpty()
     .withMessage('Name is required')
-    .trim(),
+    .trim()
+    .escape(), // Escape HTML entities
   // Middleware to check for validation errors
   (req, res, next) => {
     const errors = validationResult(req);
@@ -32,10 +64,11 @@ export const validateLogin = [
   body('username')
     .notEmpty()
     .withMessage('Username is required')
-    .trim(),
+    .customSanitizer(sanitizeUsername),
   body('password')
     .notEmpty()
-    .withMessage('Password is required'),
+    .withMessage('Password is required')
+    .customSanitizer(sanitizePassword),
   // Middleware to check for validation errors
   (req, res, next) => {
     const errors = validationResult(req);
