@@ -1,4 +1,5 @@
 import { body, validationResult } from 'express-validator';
+import AppError from '../utils/AppError.js';
 
 // Sanitization helper functions
 const sanitizeUsername = (value) => {
@@ -53,7 +54,7 @@ export const validateRegistration = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return next(new AppError('Validation Error', 400, errors.array()));
     }
     next();
   }
@@ -73,7 +74,7 @@ export const validateLogin = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return next(new AppError('Validation Error', 400, errors.array()));
     }
     next();
   }

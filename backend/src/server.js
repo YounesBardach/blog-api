@@ -49,7 +49,11 @@ app.get('/api/csrf-token', csrfProtection, (req, res) => {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict'
   });
-  res.status(204).end();
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    message: 'CSRF token set successfully'
+  });
 });
 
 // Middleware to automatically set X-XSRF-TOKEN header from cookie
@@ -87,9 +91,13 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.get('/', asyncHandler(async (req, res) => {
-  res.json({ message: 'Welcome to the Blog API' });
-}));
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    message: 'Welcome to the Blog API'
+  });
+});
 
 // API Routes
 app.use('/api/users', userRoutes);
