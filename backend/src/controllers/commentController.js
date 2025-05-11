@@ -1,169 +1,26 @@
-import prisma from '../config/prisma.js';
+import asyncHandler from 'express-async-handler';
+import * as commentService from '../services/commentService.js';
 import AppError from '../utils/AppError.js';
 
-export const createComment = async (req, res, next) => {
-  try {
-    const { content } = req.body;
-    const { postId } = req.params;
+export const getPostComments = asyncHandler(async (req, res, next) => {
+  const comments = await commentService.findCommentsByPostId(req.params.postId);
+  res.status(200).json({ success: true, status: 'success', data: { comments } });
+});
 
-    // Check if post exists
-    const post = await prisma.post.findUnique({
-      where: { id: postId },
-    });
+export const createComment = asyncHandler(async (req, res, next) => {
+  // req.user is attached by the 'protect' middleware
+  const comment = await commentService.create(req.params.postId, req.body, req.user.id);
+  res.status(201).json({ success: true, status: 'success', data: { comment } });
+});
 
-    if (!post) {
-      throw new AppError('Post not found', 404, {
-        resource: 'post',
-        id: postId,
-        code: 'RESOURCE_NOT_FOUND'
-      });
-    }
+export const updateComment = asyncHandler(async (req, res, next) => {
+  // req.user is attached by the 'protect' middleware
+  const updatedComment = await commentService.update(req.params.id, req.body, req.user.id, req.user.role);
+  res.status(200).json({ success: true, status: 'success', data: { comment: updatedComment } });
+});
 
-    const comment = await prisma.comment.create({
-      data: {
-        content,
-        post: {
-          connect: { id: postId },
-        },
-        author: {
-          connect: { id: req.user.id },
-        },
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-      },
-    });
-
-    res.status(201).json({
-      success: true,
-      status: 'success',
-      data: { comment }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const updateComment = async (req, res, next) => {
-  try {
-    const { content } = req.body;
-
-    const comment = await prisma.comment.findUnique({
-      where: { id: req.params.id },
-      include: { author: true },
-    });
-
-    if (!comment) {
-      throw new AppError('Comment not found', 404, {
-        resource: 'comment',
-        id: req.params.id,
-        code: 'RESOURCE_NOT_FOUND'
-      });
-    }
-
-    // Check if user is the comment author or an admin
-    if (comment.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-      throw new AppError('Not authorized to update this comment', 403, {
-        resource: 'comment',
-        id: req.params.id,
-        code: 'UNAUTHORIZED_ACCESS',
-        requiredRole: 'ADMIN',
-        userRole: req.user.role
-      });
-    }
-
-    const updatedComment = await prisma.comment.update({
-      where: { id: req.params.id },
-      data: { content },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-      },
-    });
-
-    res.status(200).json({
-      success: true,
-      status: 'success',
-      data: { comment: updatedComment }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const deleteComment = async (req, res, next) => {
-  try {
-    const comment = await prisma.comment.findUnique({
-      where: { id: req.params.id },
-      include: { author: true },
-    });
-
-    if (!comment) {
-      throw new AppError('Comment not found', 404, {
-        resource: 'comment',
-        id: req.params.id,
-        code: 'RESOURCE_NOT_FOUND'
-      });
-    }
-
-    // Check if user is the comment author or an admin
-    if (comment.authorId !== req.user.id && req.user.role !== 'ADMIN') {
-      throw new AppError('Not authorized to delete this comment', 403, {
-        resource: 'comment',
-        id: req.params.id,
-        code: 'UNAUTHORIZED_ACCESS',
-        requiredRole: 'ADMIN',
-        userRole: req.user.role
-      });
-    }
-
-    await prisma.comment.delete({
-      where: { id: req.params.id },
-    });
-
-    res.status(200).json({
-      success: true,
-      status: 'success',
-      data: { message: 'Comment removed' }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getPostComments = async (req, res, next) => {
-  try {
-    const comments = await prisma.comment.findMany({
-      where: { postId: req.params.postId },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    res.status(200).json({
-      success: true,
-      status: 'success',
-      data: { comments }
-    });
-  } catch (error) {
-    next(error);
-  }
-}; 
+export const deleteComment = asyncHandler(async (req, res, next) => {
+  // req.user is attached by the 'protect' middleware
+  await commentService.remove(req.params.id, req.user.id, req.user.role);
+  res.status(200).json({ success: true, status: 'success', data: { message: 'Comment removed' } });
+}); 

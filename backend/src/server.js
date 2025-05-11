@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import asyncHandler from 'express-async-handler';
+import { cleanEnv, str, port } from 'envalid';
 import userRoutes from './routes/userRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
@@ -10,11 +10,26 @@ import specs, { swaggerUiOptions } from './config/swagger.js';
 import cookieParser from 'cookie-parser';
 import csrf from 'csurf';
 import cors from 'cors';
+import logger from './config/logger.js';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
-// Load environment variables
+// Load and validate environment variables
 dotenv.config();
+const env = cleanEnv(process.env, {
+  NODE_ENV: str({ choices: ['development', 'test', 'production', 'staging'], default: 'development' }),
+  PORT: port({ default: 3000 }),
+  DATABASE_URL: str(),
+  JWT_SECRET: str(),
+  JWT_EXPIRE: str({ default: '30d' }),
+  CORS_ORIGINS: str({ default: '' }), // Comma-separated string
+  LOG_LEVEL: str({ default: 'info' }),
+});
 
 const app = express();
+
+// Apply basic security headers
+app.use(helmet());
 
 // Parse JSON bodies
 app.use(express.json());
@@ -22,9 +37,30 @@ app.use(express.json());
 // Parse cookies
 app.use(cookieParser());
 
+// Basic rate limiting (apply before CORS and other routes)
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // Limit each IP to 100 requests per `windowMs`
+	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { success: false, status: 'fail', message: 'Too many requests, please try again after 15 minutes' }
+});
+app.use(limiter);
+
 // Enable CORS with credentials
+const allowedOrigins = env.CORS_ORIGINS.split(',').filter(Boolean);
+logger.info(`Allowed CORS origins: ${allowedOrigins.join(', ')}`);
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5000'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests) in dev
+    if (!origin && env.NODE_ENV === 'development') return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN'],
   credentials: true,
@@ -35,7 +71,7 @@ app.use(cors({
 // CSRF protection
 const csrfProtection = csrf({ 
   cookie: {
-    httpOnly: false,  // Allow Swagger UI to access the cookie
+    httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict'
   }
@@ -66,7 +102,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 // Apply CSRF protection based on HTTP method
 app.use((req, res, next) => {
   const stateChangingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
@@ -110,9 +145,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
 // Error handling middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
+const PORT = env.PORT; // Use validated port
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
+  logger.info(`Server running in ${env.NODE_ENV} mode on port ${PORT}`);
+  logger.info(`API Documentation available at http://localhost:${PORT}/api-docs`);
 }); 

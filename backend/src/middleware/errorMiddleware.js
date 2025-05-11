@@ -1,9 +1,8 @@
 import { Prisma } from '@prisma/client';
 import AppError from '../utils/AppError.js';
+import logger from '../config/logger.js';
 
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
-
   // Default error response
   let statusCode = 500;
   let message = 'Internal Server Error';
@@ -110,23 +109,37 @@ const errorHandler = (err, req, res, next) => {
     errors = err.errors;
   }
 
-  // Handle unhandled errors
-  if (statusCode === 500) {
-    // Log the error for debugging
-    console.error('Unhandled error:', err);
-    // Don't expose internal error details in production
-    if (process.env.NODE_ENV !== 'development') {
-      message = 'An unexpected error occurred';
-    }
+  // Handle unhandled errors or refine message for 500s
+  if (statusCode === 500 && process.env.NODE_ENV !== 'production') {
+    // In development, keep the original error message if it exists for 500s
+    message = err.message || 'An unexpected error occurred';
+  } else if (statusCode === 500) {
+    message = 'An unexpected error occurred'; // Generic message for production 500s
   }
+
+  // Log the classified error details before sending the response
+  logger.error(message, { // Log the final, possibly more specific message
+    statusCode,
+    status: new AppError(message, statusCode).status, // Re-calculate status text based on final statusCode
+    errors, // Log the structured errors object
+    originalError: {
+        message: err.message, // Original error message
+        name: err.name,
+        code: err.code, // Original error code if available
+    },
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+  });
 
   // Send error response
   res.status(statusCode).json({
     success: false,
-    status: new AppError(message, statusCode).status,
+    status: new AppError(message, statusCode).status, // Use the final classified message
     message,
     errors,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };
 

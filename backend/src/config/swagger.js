@@ -36,8 +36,7 @@ This API uses CSRF protection. Before making any non-GET requests:
     }
   },
   apis: [
-    './src/routes/*.js',
-    './src/docs/*.js'  // Path to the Swagger documentation files
+    './src/docs/*.js',  // Path to the Swagger documentation files
   ]
 };
 
@@ -46,15 +45,6 @@ const specs = swaggerJsdoc(options);
 // Swagger UI configuration
 export const swaggerUiOptions = {
   swaggerOptions: {
-    requestInterceptor: function(req) {
-      // The cookie will be automatically included by the browser
-      // We just need to set the header if the cookie exists
-      const csrfToken = req.cookies?.['XSRF-TOKEN'];
-      if (csrfToken) {
-        req.headers['X-XSRF-TOKEN'] = csrfToken;
-      }
-      return req;
-    },
     withCredentials: true,
     persistAuthorization: true,
     displayRequestDuration: true,
