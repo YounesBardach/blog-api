@@ -4,19 +4,10 @@
   "description": "Blog project with Express backend and React frontends",
   "private": true,
   "workspaces": [
-    "backend",
-    "reader-app",
-    "admin-app"
+    "backend"
   ],
-  "scripts": {
-    "start:backend": "cd backend && npm run dev",
-    "start:reader": "cd reader-app && npm start",
-    "start:admin": "cd admin-app && npm start"
-  },
+  "scripts": {},
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@prisma/client": "^6.6.0",
-    "prisma": "^6.6.0"
-  }
+  "dependencies": {}
 }
