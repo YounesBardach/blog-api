@@ -46,7 +46,13 @@ export const register = async ({ name, email, username, password }) => {
   }
 
   const token = generateToken(user.id);
-  const userResponse = { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role };
+  const userResponse = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+  };
 
   return { user: userResponse, token };
 };
@@ -64,7 +70,13 @@ export const login = async ({ username, password }) => {
   }
 
   const token = generateToken(user.id);
-  const userResponse = { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role };
+  const userResponse = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+  };
 
   return { user: userResponse, token };
 };
@@ -90,4 +102,4 @@ export const findUserProfileById = async (userId) => {
     });
   }
   return user;
-}; 
+};
