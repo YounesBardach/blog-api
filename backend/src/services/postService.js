@@ -1,5 +1,4 @@
 import prisma from '../config/prisma.js';
-import AppError from '../utils/AppError.js';
 
 // Helper to select common fields for author
 const authorSelect = {
@@ -38,11 +37,17 @@ export const findPostById = async (postId) => {
   });
 
   if (!post) {
-    throw new AppError('Post not found', 404, {
+    const error = new Error('Post not found.');
+    error.name = 'NotFoundError';
+    error.statusCode = 404;
+    error.errors = {
       resource: 'post',
       id: postId,
-      code: 'RESOURCE_NOT_FOUND',
-    });
+      operation: 'find_post_by_id',
+      code: 'POST_NOT_FOUND',
+      details: `Post with ID '${postId}' was not found.`,
+    };
+    throw error;
   }
   return post;
 };
@@ -72,22 +77,34 @@ export const update = async (postId, postData, userId, userRole) => {
   });
 
   if (!post) {
-    throw new AppError('Post not found', 404, {
+    const error = new Error('Post not found for update.');
+    error.name = 'NotFoundError';
+    error.statusCode = 404;
+    error.errors = {
       resource: 'post',
       id: postId,
-      code: 'RESOURCE_NOT_FOUND',
-    });
+      operation: 'update_post',
+      code: 'POST_NOT_FOUND',
+      details: `Post with ID '${postId}' was not found.`,
+    };
+    throw error;
   }
 
   // Authorization check
   if (post.authorId !== userId && userRole !== 'ADMIN') {
-    throw new AppError('Not authorized to update this post', 403, {
+    const error = new Error('Not authorized to update this post');
+    error.name = 'ForbiddenError';
+    error.statusCode = 403;
+    error.errors = {
       resource: 'post',
       id: postId,
-      code: 'UNAUTHORIZED_ACCESS',
+      operation: 'update_post',
+      code: 'UNAUTHORIZED_POST_UPDATE',
       requiredRole: 'ADMIN',
       userRole,
-    });
+      details: 'User is not the author or an admin.',
+    };
+    throw error;
   }
 
   return prisma.post.update({
@@ -109,22 +126,34 @@ export const remove = async (postId, userId, userRole) => {
   });
 
   if (!post) {
-    throw new AppError('Post not found', 404, {
+    const error = new Error('Post not found for deletion.');
+    error.name = 'NotFoundError';
+    error.statusCode = 404;
+    error.errors = {
       resource: 'post',
       id: postId,
-      code: 'RESOURCE_NOT_FOUND',
-    });
+      operation: 'delete_post',
+      code: 'POST_NOT_FOUND',
+      details: `Post with ID '${postId}' was not found.`,
+    };
+    throw error;
   }
 
   // Authorization check
   if (post.authorId !== userId && userRole !== 'ADMIN') {
-    throw new AppError('Not authorized to delete this post', 403, {
+    const error = new Error('Not authorized to delete this post');
+    error.name = 'ForbiddenError';
+    error.statusCode = 403;
+    error.errors = {
       resource: 'post',
       id: postId,
-      code: 'UNAUTHORIZED_ACCESS',
+      operation: 'delete_post',
+      code: 'UNAUTHORIZED_POST_DELETE',
       requiredRole: 'ADMIN',
       userRole,
-    });
+      details: 'User is not the author or an admin.',
+    };
+    throw error;
   }
 
   // Transaction to delete comments and then the post
@@ -136,4 +165,4 @@ export const remove = async (postId, userId, userRole) => {
       where: { id: postId },
     });
   });
-}; 
+};

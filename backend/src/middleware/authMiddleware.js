@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import asyncHandler from 'express-async-handler';
 import prisma from '../config/prisma.js';
-import AppError from '../utils/AppError.js';
 
 export const protect = asyncHandler(async (req, res, next) => {
   let token;
@@ -10,11 +9,15 @@ export const protect = asyncHandler(async (req, res, next) => {
   token = req.cookies.jwt;
 
   if (!token) {
-    return next(new AppError('Not authorized, no token', 401, {
+    const error = new Error('Not authorized, no token');
+    error.statusCode = 401;
+    error.name = 'MissingTokenError';
+    error.errors = {
       code: 'MISSING_TOKEN',
       field: 'authorization',
-      details: 'No JWT token found in cookies'
-    }));
+      details: 'No JWT token found in cookies. Access requires authentication.',
+    };
+    return next(error);
   }
 
   try {
@@ -33,13 +36,26 @@ export const protect = asyncHandler(async (req, res, next) => {
       },
     });
 
+    if (!req.user) {
+      const error = new Error('User for token not found');
+      error.statusCode = 401;
+      error.name = 'UserNotFoundForTokenError';
+      error.errors = {
+        code: 'USER_FOR_TOKEN_NOT_FOUND',
+        details: 'The user associated with the provided token could not be found.',
+      };
+      return next(error);
+    }
+
     next();
   } catch (error) {
-    return next(new AppError('Not authorized, token failed', 401, {
-      code: 'INVALID_TOKEN',
-      field: 'authorization',
-      details: error.message
-    }));
+    if (!error.statusCode) {
+      error.statusCode = 401;
+    }
+    if (!error.name || error.name === 'Error') {
+      error.name = 'TokenVerificationError';
+    }
+    return next(error);
   }
 });
 
@@ -48,11 +64,15 @@ export const admin = (req, res, next) => {
   if (req.user && req.user.role === 'ADMIN') {
     next();
   } else {
-    return next(new AppError('Not authorized as an admin', 403, {
-      code: 'UNAUTHORIZED_ACCESS',
+    const error = new Error('Not authorized as an admin');
+    error.statusCode = 403;
+    error.name = 'ForbiddenError';
+    error.errors = {
+      code: 'ADMIN_ACCESS_REQUIRED',
       requiredRole: 'ADMIN',
       userRole: req.user?.role || 'none',
-      details: 'Admin privileges required for this operation'
-    }));
+      details: 'This resource or operation requires administrator privileges.',
+    };
+    return next(error);
   }
-}; 
+};

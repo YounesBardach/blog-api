@@ -58,7 +58,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- * 
+ *
  *   post:
  *     summary: Create a new comment
  *     tags: [Comments]
@@ -109,7 +109,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- * 
+ *
  * /api/comments/{id}:
  *   put:
  *     summary: Update a comment
@@ -142,7 +142,17 @@
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Comment'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     comment:
+ *                       $ref: '#/components/schemas/Comment'
  *       400:
  *         description: Invalid input
  *         content:
@@ -161,7 +171,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- * 
+ *
  *   delete:
  *     summary: Delete a comment
  *     tags: [Comments]
@@ -178,6 +188,21 @@
  *     responses:
  *       200:
  *         description: Comment deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: Comment removed
  *       401:
  *         description: Unauthorized
  *         content:
@@ -190,4 +215,4 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- */ 
+ */

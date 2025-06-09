@@ -1,5 +1,4 @@
 import prisma from '../config/prisma.js';
-import AppError from '../utils/AppError.js';
 
 // Helper to select common fields for author
 const authorSelect = {
@@ -12,7 +11,17 @@ export const findCommentsByPostId = async (postId) => {
   // Ensure post exists first (optional, but good practice)
   const postExists = await prisma.post.findUnique({ where: { id: postId } });
   if (!postExists) {
-    throw new AppError('Post not found', 404, { resource: 'post', id: postId, code: 'RESOURCE_NOT_FOUND' });
+    const error = new Error('Post not found when finding comments.'); // More specific message
+    error.name = 'NotFoundError';
+    error.statusCode = 404;
+    error.errors = {
+      resource: 'post',
+      id: postId,
+      operation: 'find_comments_by_post_id',
+      code: 'RELATED_POST_NOT_FOUND',
+      details: `Post with ID '${postId}' does not exist, cannot retrieve comments.`,
+    };
+    throw error;
   }
 
   return prisma.comment.findMany({
@@ -30,7 +39,17 @@ export const create = async (postId, commentData, authorId) => {
   // Ensure post exists
   const postExists = await prisma.post.findUnique({ where: { id: postId } });
   if (!postExists) {
-    throw new AppError('Post not found', 404, { resource: 'post', id: postId, code: 'RESOURCE_NOT_FOUND' });
+    const error = new Error('Cannot create comment: Post not found.');
+    error.name = 'RelatedResourceNotFoundError';
+    error.statusCode = 400; // Or 422 if preferred for unprocessable due to missing dependency
+    error.errors = {
+      resource: 'post',
+      id: postId,
+      operation: 'create_comment',
+      code: 'POST_NOT_FOUND_FOR_COMMENT', // More specific code
+      details: `Post with ID '${postId}' does not exist, cannot create comment.`,
+    };
+    throw error;
   }
 
   return prisma.comment.create({
@@ -57,22 +76,34 @@ export const update = async (commentId, commentData, userId, userRole) => {
   });
 
   if (!comment) {
-    throw new AppError('Comment not found', 404, {
+    const error = new Error('Comment not found for update.');
+    error.name = 'NotFoundError';
+    error.statusCode = 404;
+    error.errors = {
       resource: 'comment',
       id: commentId,
-      code: 'RESOURCE_NOT_FOUND',
-    });
+      operation: 'update_comment',
+      code: 'COMMENT_NOT_FOUND',
+      details: `Comment with ID '${commentId}' was not found.`,
+    };
+    throw error;
   }
 
   // Authorization check
   if (comment.authorId !== userId && userRole !== 'ADMIN') {
-    throw new AppError('Not authorized to update this comment', 403, {
+    const error = new Error('Not authorized to update this comment');
+    error.name = 'ForbiddenError';
+    error.statusCode = 403;
+    error.errors = {
       resource: 'comment',
       id: commentId,
-      code: 'UNAUTHORIZED_ACCESS',
+      operation: 'update_comment',
+      code: 'UNAUTHORIZED_COMMENT_UPDATE',
       requiredRole: 'ADMIN',
       userRole,
-    });
+      details: 'User is not the author or an admin.',
+    };
+    throw error;
   }
 
   return prisma.comment.update({
@@ -90,25 +121,37 @@ export const remove = async (commentId, userId, userRole) => {
   });
 
   if (!comment) {
-    throw new AppError('Comment not found', 404, {
+    const error = new Error('Comment not found for deletion.');
+    error.name = 'NotFoundError';
+    error.statusCode = 404;
+    error.errors = {
       resource: 'comment',
       id: commentId,
-      code: 'RESOURCE_NOT_FOUND',
-    });
+      operation: 'delete_comment',
+      code: 'COMMENT_NOT_FOUND',
+      details: `Comment with ID '${commentId}' was not found.`,
+    };
+    throw error;
   }
 
   // Authorization check
   if (comment.authorId !== userId && userRole !== 'ADMIN') {
-    throw new AppError('Not authorized to delete this comment', 403, {
+    const error = new Error('Not authorized to delete this comment');
+    error.name = 'ForbiddenError';
+    error.statusCode = 403;
+    error.errors = {
       resource: 'comment',
       id: commentId,
-      code: 'UNAUTHORIZED_ACCESS',
+      operation: 'delete_comment',
+      code: 'UNAUTHORIZED_COMMENT_DELETE',
       requiredRole: 'ADMIN',
       userRole,
-    });
+      details: 'User is not the author or an admin.',
+    };
+    throw error;
   }
 
   return prisma.comment.delete({
     where: { id: commentId },
   });
-}; 
+};

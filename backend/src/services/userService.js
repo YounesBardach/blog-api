@@ -1,7 +1,6 @@
 import prisma from '../config/prisma.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import AppError from '../utils/AppError.js';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -18,13 +17,17 @@ export const register = async ({ name, email, username, password }) => {
   });
 
   if (userExists) {
-    throw new AppError('User already exists with this email or username', 400, {
+    const error = new Error('User already exists with this email or username');
+    error.name = 'DuplicateEntryError';
+    error.statusCode = 409;
+    error.errors = {
       fields: {
-        email: userExists.email === email ? 'Email already in use' : null,
-        username: userExists.username === username ? 'Username already taken' : null,
+        email: userExists.email === email ? 'Email already in use' : undefined,
+        username: userExists.username === username ? 'Username already taken' : undefined,
       },
       code: 'DUPLICATE_ENTRY',
-    });
+    };
+    throw error;
   }
 
   // Hash password
@@ -42,7 +45,14 @@ export const register = async ({ name, email, username, password }) => {
   });
 
   if (!user) {
-    throw new AppError('Invalid user data', 400, { code: 'INVALID_DATA' });
+    const error = new Error('Invalid user data during registration');
+    error.name = 'InvalidDataError';
+    error.statusCode = 400;
+    error.errors = {
+      code: 'REGISTRATION_INVALID_DATA',
+      details: 'User creation failed with provided data.',
+    };
+    throw error;
   }
 
   const token = generateToken(user.id);
@@ -63,10 +73,15 @@ export const login = async ({ username, password }) => {
   });
 
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    throw new AppError('Invalid credentials', 401, {
+    const error = new Error('Invalid credentials');
+    error.name = 'AuthenticationError';
+    error.statusCode = 401;
+    error.errors = {
       field: 'credentials',
       code: 'INVALID_CREDENTIALS',
-    });
+      details: 'The username or password provided is incorrect.',
+    };
+    throw error;
   }
 
   const token = generateToken(user.id);
@@ -95,11 +110,16 @@ export const findUserProfileById = async (userId) => {
   });
 
   if (!user) {
-    throw new AppError('User not found', 404, {
+    const error = new Error('User not found');
+    error.name = 'NotFoundError';
+    error.statusCode = 404;
+    error.errors = {
       resource: 'user',
       id: userId,
-      code: 'RESOURCE_NOT_FOUND',
-    });
+      code: 'USER_NOT_FOUND',
+      details: `User with ID '${userId}' was not found.`,
+    };
+    throw error;
   }
   return user;
 };

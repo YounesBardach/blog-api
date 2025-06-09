@@ -98,7 +98,7 @@
  * @swagger
  * /api/posts:
  *   post:
- *     summary: Create a new post
+ *     summary: Create a new post (Admin only)
  *     tags: [Posts]
  *     security:
  *       - cookieAuth: []
@@ -155,7 +155,7 @@
  * @swagger
  * /api/posts/{id}:
  *   put:
- *     summary: Update a post
+ *     summary: Update a post (Admin only)
  *     tags: [Posts]
  *     security:
  *       - cookieAuth: []
@@ -228,7 +228,7 @@
  * @swagger
  * /api/posts/{id}:
  *   delete:
- *     summary: Delete a post
+ *     summary: Delete a post (Admin only)
  *     tags: [Posts]
  *     security:
  *       - cookieAuth: []
@@ -276,4 +276,4 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- */ 
+ */

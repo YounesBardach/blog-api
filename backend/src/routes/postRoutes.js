@@ -19,4 +19,4 @@ router.post('/', protect, admin, createPost);
 router.put('/:id', protect, admin, updatePost);
 router.delete('/:id', protect, admin, deletePost);
 
-export default router; 
+export default router;
