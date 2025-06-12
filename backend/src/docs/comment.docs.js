@@ -1,51 +1,26 @@
 /**
  * @swagger
- * components:
- *   schemas:
- *     Comment:
- *       type: object
- *       required:
- *         - content
- *         - postId
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the comment
- *         content:
- *           type: string
- *           description: The content of the comment
- *         postId:
- *           type: string
- *           description: The ID of the post this comment belongs to
- *         userId:
- *           type: string
- *           description: The ID of the user who created the comment
- *         createdAt:
- *           type: string
- *           format: date-time
- *           description: The date the comment was created
- *         updatedAt:
- *           type: string
- *           format: date-time
- *           description: The date the comment was last updated
+ * tags:
+ *   name: 4. Comments
+ *   description: Managing comments on posts
  */
 
 /**
  * @swagger
  * /api/comments/post/{postId}:
  *   get:
- *     summary: Get all comments for a post
- *     tags: [Comments]
+ *     summary: Get all comments for a specific post
+ *     tags: [4. Comments]
  *     parameters:
  *       - in: path
  *         name: postId
  *         schema:
  *           type: string
  *         required: true
- *         description: The post id
+ *         description: The ID of the post to get comments for
  *     responses:
  *       200:
- *         description: List of comments for the post
+ *         description: A list of comments for the post
  *         content:
  *           application/json:
  *             schema:
@@ -60,8 +35,8 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  *
  *   post:
- *     summary: Create a new comment
- *     tags: [Comments]
+ *     summary: Create a new comment on a post
+ *     tags: [4. Comments]
  *     security:
  *       - cookieAuth: []
  *       - csrfToken: []
@@ -71,7 +46,7 @@
  *         schema:
  *           type: string
  *         required: true
- *         description: The post id
+ *         description: The ID of the post to comment on
  *     requestBody:
  *       required: true
  *       content:
@@ -91,14 +66,14 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Comment'
- *       400:
- *         description: Invalid input
+ *       401:
+ *         description: Not authenticated (i.e., not logged in)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       401:
- *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Invalid CSRF token
  *         content:
  *           application/json:
  *             schema:
@@ -113,7 +88,7 @@
  * /api/comments/{id}:
  *   put:
  *     summary: Update a comment
- *     tags: [Comments]
+ *     tags: [4. Comments]
  *     security:
  *       - cookieAuth: []
  *       - csrfToken: []
@@ -123,7 +98,7 @@
  *         schema:
  *           type: string
  *         required: true
- *         description: The comment id
+ *         description: The ID of the comment to update
  *     requestBody:
  *       required: true
  *       content:
@@ -142,17 +117,7 @@
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 status:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     comment:
- *                       $ref: '#/components/schemas/Comment'
+ *               $ref: '#/components/schemas/Comment'
  *       400:
  *         description: Invalid input
  *         content:
@@ -160,7 +125,13 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: Unauthorized
+ *         description: Not authenticated (i.e., not logged in)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden - User is not the owner or an admin, or CSRF token is invalid
  *         content:
  *           application/json:
  *             schema:
@@ -174,7 +145,7 @@
  *
  *   delete:
  *     summary: Delete a comment
- *     tags: [Comments]
+ *     tags: [4. Comments]
  *     security:
  *       - cookieAuth: []
  *       - csrfToken: []
@@ -184,7 +155,7 @@
  *         schema:
  *           type: string
  *         required: true
- *         description: The comment id
+ *         description: The ID of the comment to delete
  *     responses:
  *       200:
  *         description: Comment deleted successfully
@@ -195,8 +166,10 @@
  *               properties:
  *                 success:
  *                   type: boolean
+ *                   example: true
  *                 status:
  *                   type: string
+ *                   example: success
  *                 data:
  *                   type: object
  *                   properties:
@@ -204,7 +177,13 @@
  *                       type: string
  *                       example: Comment removed
  *       401:
- *         description: Unauthorized
+ *         description: Not authenticated (i.e., not logged in)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden - User is not the owner or an admin, or CSRF token is invalid
  *         content:
  *           application/json:
  *             schema:

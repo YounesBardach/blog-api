@@ -40,8 +40,8 @@ export const create = async (postId, commentData, authorId) => {
   const postExists = await prisma.post.findUnique({ where: { id: postId } });
   if (!postExists) {
     const error = new Error('Cannot create comment: Post not found.');
-    error.name = 'RelatedResourceNotFoundError';
-    error.statusCode = 400; // Or 422 if preferred for unprocessable due to missing dependency
+    error.name = 'NotFoundError';
+    error.statusCode = 404;
     error.errors = {
       resource: 'post',
       id: postId,

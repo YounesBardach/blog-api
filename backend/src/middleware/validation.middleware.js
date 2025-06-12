@@ -76,3 +76,21 @@ export const validateLogin = [
     next();
   },
 ];
+
+// Validation middleware for updating a comment
+export const validateCommentUpdate = [
+  body('content').notEmpty().withMessage('Comment content cannot be empty').trim().escape(),
+  // Middleware to check for validation errors
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // Throw a plain error with name 'ValidationError' and attach errors array
+      const error = new Error('Validation Error');
+      error.name = 'ValidationError';
+      error.statusCode = 400;
+      error.errors = errors.array();
+      return next(error);
+    }
+    next();
+  },
+];

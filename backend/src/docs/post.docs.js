@@ -1,36 +1,8 @@
 /**
  * @swagger
- * components:
- *   schemas:
- *     Post:
- *       type: object
- *       required:
- *         - title
- *         - content
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the post
- *         title:
- *           type: string
- *           description: The post title
- *         content:
- *           type: string
- *           description: The post content
- *         published:
- *           type: boolean
- *           description: Whether the post is published
- *         authorId:
- *           type: string
- *           description: The ID of the post author
- *         createdAt:
- *           type: string
- *           format: date-time
- *           description: The date the post was created
- *         updatedAt:
- *           type: string
- *           format: date-time
- *           description: The date the post was last updated
+ * tags:
+ *   name: 3. Posts
+ *   description: API for managing blog posts
  */
 
 /**
@@ -38,10 +10,10 @@
  * /api/posts:
  *   get:
  *     summary: Get all published posts
- *     tags: [Posts]
+ *     tags: [3. Posts]
  *     responses:
  *       200:
- *         description: List of published posts
+ *         description: A list of published posts
  *         content:
  *           application/json:
  *             schema:
@@ -49,10 +21,17 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                 posts:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Post'
+ *                   example: true
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     posts:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Post'
  *       500:
  *         description: Server error
  *         content:
@@ -66,17 +45,17 @@
  * /api/posts/{id}:
  *   get:
  *     summary: Get a post by ID
- *     tags: [Posts]
+ *     tags: [3. Posts]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Post ID
+ *         description: The ID of the post to retrieve
  *     responses:
  *       200:
- *         description: Post details
+ *         description: The post object
  *         content:
  *           application/json:
  *             schema:
@@ -84,8 +63,15 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                 post:
- *                   $ref: '#/components/schemas/Post'
+ *                   example: true
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     post:
+ *                       $ref: '#/components/schemas/Post'
  *       404:
  *         description: Post not found
  *         content:
@@ -99,7 +85,7 @@
  * /api/posts:
  *   post:
  *     summary: Create a new post (Admin only)
- *     tags: [Posts]
+ *     tags: [3. Posts]
  *     security:
  *       - cookieAuth: []
  *       - csrfToken: []
@@ -129,8 +115,15 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                 post:
- *                   $ref: '#/components/schemas/Post'
+ *                   example: true
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     post:
+ *                       $ref: '#/components/schemas/Post'
  *       400:
  *         description: Invalid input format
  *         content:
@@ -138,13 +131,13 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: Not authenticated
+ *         description: Not authenticated (i.e., not logged in)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Server error
+ *       403:
+ *         description: Forbidden - User is not an admin or CSRF token is invalid
  *         content:
  *           application/json:
  *             schema:
@@ -156,7 +149,7 @@
  * /api/posts/{id}:
  *   put:
  *     summary: Update a post (Admin only)
- *     tags: [Posts]
+ *     tags: [3. Posts]
  *     security:
  *       - cookieAuth: []
  *       - csrfToken: []
@@ -166,7 +159,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Post ID
+ *         description: The ID of the post to update
  *     requestBody:
  *       required: true
  *       content:
@@ -190,8 +183,15 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                 post:
- *                   $ref: '#/components/schemas/Post'
+ *                   example: true
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     post:
+ *                       $ref: '#/components/schemas/Post'
  *       400:
  *         description: Invalid input format
  *         content:
@@ -199,25 +199,19 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: Not authenticated
+ *         description: Not authenticated (i.e., not logged in)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
- *         description: Not authorized to update this post
+ *         description: Forbidden - User is not an admin or CSRF token is invalid
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Post not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Server error
  *         content:
  *           application/json:
  *             schema:
@@ -229,7 +223,7 @@
  * /api/posts/{id}:
  *   delete:
  *     summary: Delete a post (Admin only)
- *     tags: [Posts]
+ *     tags: [3. Posts]
  *     security:
  *       - cookieAuth: []
  *       - csrfToken: []
@@ -239,7 +233,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Post ID
+ *         description: The ID of the post to delete
  *     responses:
  *       200:
  *         description: Post deleted successfully
@@ -250,28 +244,30 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                 message:
+ *                   example: true
+ *                 status:
  *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: Post removed
  *       401:
- *         description: Not authenticated
+ *         description: Not authenticated (i.e., not logged in)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
- *         description: Not authorized to delete this post
+ *         description: Forbidden - User is not an admin or CSRF token is invalid
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Post not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Server error
  *         content:
  *           application/json:
  *             schema:

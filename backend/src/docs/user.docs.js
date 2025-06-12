@@ -1,34 +1,8 @@
 /**
  * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       required:
- *         - name
- *         - email
- *         - username
- *         - password
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the user
- *         name:
- *           type: string
- *           description: The user's full name
- *         email:
- *           type: string
- *           description: The user's email address
- *         username:
- *           type: string
- *           description: The user's username
- *         role:
- *           type: string
- *           description: The user's role (USER or ADMIN)
- *         createdAt:
- *           type: string
- *           format: date-time
- *           description: The date the user was created
+ * tags:
+ *   name: 2. Users
+ *   description: User management and authentication
  */
 
 /**
@@ -36,7 +10,7 @@
  * /api/users/register:
  *   post:
  *     summary: Register a new user
- *     tags: [Users]
+ *     tags: [2. Users]
  *     requestBody:
  *       required: true
  *       content:
@@ -60,23 +34,19 @@
  *                 format: password
  *     responses:
  *       201:
- *         description: User successfully registered
+ *         description: User successfully registered. Returns the user object and sets a `connect.sid` session cookie.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *         headers:
- *           Set-Cookie:
- *             schema:
- *               type: string
- *               description: JWT token in HTTP-only cookie
+ *               $ref: '#/components/schemas/User'
  *       400:
  *         description: Invalid input format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden - Invalid CSRF token
  *         content:
  *           application/json:
  *             schema:
@@ -94,7 +64,7 @@
  * /api/users/login:
  *   post:
  *     summary: Login a user
- *     tags: [Users]
+ *     tags: [2. Users]
  *     requestBody:
  *       required: true
  *       content:
@@ -112,21 +82,11 @@
  *                 format: password
  *     responses:
  *       200:
- *         description: User successfully logged in
+ *         description: User successfully logged in. Returns the user object and sets a `connect.sid` session cookie.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *         headers:
- *           Set-Cookie:
- *             schema:
- *               type: string
- *               description: JWT token in HTTP-only cookie
+ *                $ref: '#/components/schemas/User'
  *       400:
  *         description: Invalid input format
  *         content:
@@ -139,6 +99,12 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden - Invalid CSRF token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -146,13 +112,12 @@
  * /api/users/logout:
  *   post:
  *     summary: Logout current user
- *     tags: [Users]
+ *     tags: [2. Users]
  *     security:
  *       - cookieAuth: []
- *       - csrfToken: []
  *     responses:
  *       200:
- *         description: User successfully logged out
+ *         description: User successfully logged out.
  *         content:
  *           application/json:
  *             schema:
@@ -160,15 +125,24 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                 message:
+ *                   example: true
+ *                 status:
  *                   type: string
- *         headers:
- *           Set-Cookie:
- *             schema:
- *               type: string
- *               description: Clears the JWT cookie
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: Logged out successfully
  *       401:
  *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden - Invalid CSRF token
  *         content:
  *           application/json:
  *             schema:
@@ -180,7 +154,7 @@
  * /api/users/profile:
  *   get:
  *     summary: Get current user profile
- *     tags: [Users]
+ *     tags: [2. Users]
  *     security:
  *       - cookieAuth: []
  *     responses:
@@ -189,22 +163,11 @@
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 user:
- *                   $ref: '#/components/schemas/User'
+ *               $ref: '#/components/schemas/User'
  *       401:
  *         description: Not authenticated
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */ 
+ */

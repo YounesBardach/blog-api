@@ -1,5 +1,3 @@
-//Need to check if the error response schema correspond to the error handler
-
 // Import the swagger-jsdoc library to generate Swagger documentation from JSDoc comments
 import swaggerJsdoc from 'swagger-jsdoc';
 
@@ -60,29 +58,35 @@ For client applications (like a React frontend):
       },
       // Define reusable schema definitions for request and response bodies
       schemas: {
-        // Define a generic error response schema
-        ErrorResponse: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean', example: false },
-            status: { type: 'string', example: 'error' },
-            message: { type: 'string' },
-            errors: {
-              type: 'object',
-              description: 'Optional: Contains detailed error information',
-              additionalProperties: true, // Allows for flexible error object structures
-            },
-            stack: { type: 'string', description: 'Stack trace (only in development)' },
-          },
-        },
+        // Schemas are now defined in src/docs/schemas.doc.js
       },
     },
     // Define global security requirements. An empty array means no security is applied by default.
     // Security is typically applied on a per-operation basis using the 'security' keyword in JSDoc.
     security: [],
+    tags: [
+      {
+        name: '1. General',
+        description: 'General-purpose endpoints',
+      },
+      {
+        name: '2. Users',
+        description: 'User management and authentication',
+      },
+      {
+        name: '3. Posts',
+        description: 'API for managing blog posts',
+      },
+      {
+        name: '4. Comments',
+        description: 'Managing comments on posts',
+      },
+    ],
   },
   // An array of glob patterns pointing to files containing JSDoc comments for routes, schemas, etc.
-  apis: ['./src/docs/**/*.js'],
+  apis: [
+    './src/docs/*.docs.js', // Path to the Swagger documentation files
+  ],
 };
 
 // Generate the Swagger/OpenAPI specification object using swagger-jsdoc with the defined options
@@ -90,25 +94,25 @@ const specs = swaggerJsdoc(options);
 
 // Define options for configuring the Swagger UI appearance and behavior
 export const swaggerUiOptions = {
-  explorer: true, // Enables the search bar in Swagger UI, allowing filtering of operations
-  customCss: '.swagger-ui .topbar { display: none }', // Custom CSS to hide the default Swagger UI top bar
-  requestInterceptor: (req) => {
-    const getCookie = (name) => {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        let cookie = cookies[i].trim();
-        // Does this cookie string begin with the name we want?
-        if (cookie.startsWith(name + '=')) {
-          return cookie.substring(name.length + 1);
-        }
+  swaggerOptions: {
+    requestInterceptor: function (req) {
+      // The cookie will be automatically included by the browser. This interceptor
+      // reads the XSRF-TOKEN cookie and adds it to the X-XSRF-TOKEN header
+      // for all requests made from the Swagger UI.
+      const csrfToken = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+
+      if (csrfToken) {
+        req.headers['X-XSRF-TOKEN'] = csrfToken;
       }
-      return null;
-    };
-    const token = getCookie('XSRF-TOKEN');
-    if (token) {
-      req.headers['X-XSRF-TOKEN'] = token;
-    }
-    return req;
+      return req;
+    },
+    withCredentials: true,
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    tryItOutEnabled: true,
   },
 };
 

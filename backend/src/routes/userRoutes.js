@@ -13,9 +13,9 @@ const router = express.Router();
 // Public routes
 router.post('/register', validateRegistration, registerUser);
 router.post('/login', validateLogin, loginUser);
-router.post('/logout', logoutUser);
 
 // Protected routes
+router.post('/logout', protect, logoutUser);
 router.get('/profile', protect, getUserProfile);
 
 export default router;
