@@ -77,6 +77,35 @@ export const validateLogin = [
   },
 ];
 
+// Validation middleware for updating a post
+export const validatePostUpdate = [
+  // Custom validator to ensure the request body is not empty.
+  body().custom((value, { req }) => {
+    if (Object.keys(req.body).length === 0) {
+      throw new Error(
+        'Request body cannot be empty. Please provide at least one field to update (title, content, or published).'
+      );
+    }
+    return true;
+  }),
+  body('title').optional().notEmpty().withMessage('Title cannot be empty').trim().escape(),
+  body('content').optional().notEmpty().withMessage('Content cannot be empty').trim().escape(),
+  body('published').optional().isBoolean().withMessage('Published must be a boolean value'),
+  // Middleware to check for validation errors
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // Throw a plain error with name 'ValidationError' and attach errors array
+      const error = new Error('Validation Error');
+      error.name = 'ValidationError';
+      error.statusCode = 400;
+      error.errors = errors.array();
+      return next(error);
+    }
+    next();
+  },
+];
+
 // Validation middleware for updating a comment
 export const validateCommentUpdate = [
   body('content').notEmpty().withMessage('Comment content cannot be empty').trim().escape(),
