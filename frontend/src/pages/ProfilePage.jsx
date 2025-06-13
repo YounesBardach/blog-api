@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../config/axios";
-import "./AuthPages.css";
+import "./Auth.css";
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null);

@@ -1,51 +1,74 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useForm } from "react-hook-form";
 import api from "../config/axios";
-import "./AuthPages.css";
+import "./Auth.css";
 
 const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [generalError, setGeneralError] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+    watch,
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      username: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const password = watch("password");
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
+  const onSubmit = async (data) => {
     setLoading(true);
+    setGeneralError("");
 
     try {
       await api.post("/users/register", {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
+        name: data.name,
+        email: data.email,
+        username: data.username,
+        password: data.password,
       });
-      login(); // Set authentication state
+      login();
       navigate("/profile");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "An error occurred during registration"
-      );
+      const status = err.response?.status;
+      const errorData = err.response?.data;
+
+      if (status === 403) {
+        setGeneralError("We couldn't process your request. Please try again.");
+      } else if (status === 409) {
+        // Handle duplicate entry errors
+        if (errorData.type === "/errors/conflict/duplicate-entry") {
+          if (errorData.fields) {
+            Object.entries(errorData.fields).forEach(([field, message]) => {
+              if (message) {
+                setError(field, { type: "server", message });
+              }
+            });
+          }
+        }
+      } else if (status === 400) {
+        // Handle validation errors from backend
+        if (errorData.invalid_params) {
+          errorData.invalid_params.forEach(({ name, reason }) => {
+            setError(name, { type: "server", message: reason });
+          });
+        }
+      } else {
+        setGeneralError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -55,51 +78,102 @@ const RegisterPage = () => {
     <div className="auth-container">
       <div className="auth-box">
         <h1>Register</h1>
-        {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit}>
+        {generalError && <div className="error-message">{generalError}</div>}
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="form-group">
             <label htmlFor="name">Name</label>
             <input
               type="text"
               id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
+              {...register("name", {
+                required: "Name is required",
+                minLength: {
+                  value: 2,
+                  message: "Name must be at least 2 characters",
+                },
+              })}
+              className={errors.name ? "error" : ""}
             />
+            {errors.name && (
+              <div className="field-error">{errors.name.message}</div>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /\S+@\S+\.\S+/,
+                  message: "Please enter a valid email address",
+                },
+              })}
+              className={errors.email ? "error" : ""}
             />
+            {errors.email && (
+              <div className="field-error">{errors.email.message}</div>
+            )}
+          </div>
+          <div className="form-group">
+            <label htmlFor="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              {...register("username", {
+                required: "Username is required",
+                minLength: {
+                  value: 3,
+                  message: "Username must be at least 3 characters",
+                },
+                pattern: {
+                  value: /^[a-z0-9]+$/,
+                  message:
+                    "Username can only contain lowercase letters and numbers",
+                },
+              })}
+              className={errors.username ? "error" : ""}
+            />
+            {errors.username && (
+              <div className="field-error">{errors.username.message}</div>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              })}
+              className={errors.password ? "error" : ""}
             />
+            {errors.password && (
+              <div className="field-error">{errors.password.message}</div>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               type="password"
               id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
+              {...register("confirmPassword", {
+                required: "Please confirm your password",
+                validate: (value) =>
+                  value === password || "Passwords do not match",
+              })}
+              className={errors.confirmPassword ? "error" : ""}
             />
+            {errors.confirmPassword && (
+              <div className="field-error">
+                {errors.confirmPassword.message}
+              </div>
+            )}
           </div>
           <button type="submit" className="auth-button" disabled={loading}>
             {loading ? "Registering..." : "Register"}

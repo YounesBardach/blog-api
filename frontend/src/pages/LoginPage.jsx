@@ -1,37 +1,54 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useForm } from "react-hook-form";
 import api from "../config/axios";
-import "./AuthPages.css";
+import "./Auth.css";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [generalError, setGeneralError] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm({
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const onSubmit = async (data) => {
     setLoading(true);
+    setGeneralError("");
 
     try {
-      await api.post("/users/login", formData);
-      login(); // Set authentication state
+      await api.post("/users/login", data);
+      login();
       navigate("/profile");
     } catch (err) {
-      setError(err.response?.data?.message || "An error occurred during login");
+      const status = err.response?.status;
+      const errorData = err.response?.data;
+
+      if (status === 403) {
+        setGeneralError("We couldn't process your request. Please try again.");
+      } else if (status === 401) {
+        setGeneralError("Invalid username or password");
+      } else if (status === 400) {
+        // Handle validation errors from backend
+        if (errorData.invalid_params) {
+          errorData.invalid_params.forEach(({ name, reason }) => {
+            setError(name, { type: "server", message: reason });
+          });
+        }
+      } else {
+        setGeneralError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -41,29 +58,35 @@ const LoginPage = () => {
     <div className="auth-container">
       <div className="auth-box">
         <h1>Login</h1>
-        {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit}>
+        {generalError && <div className="error-message">{generalError}</div>}
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="username">Username</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
+              type="text"
+              id="username"
+              {...register("username", {
+                required: "Username is required",
+              })}
+              className={errors.username ? "error" : ""}
             />
+            {errors.username && (
+              <div className="field-error">{errors.username.message}</div>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
+              {...register("password", {
+                required: "Password is required",
+              })}
+              className={errors.password ? "error" : ""}
             />
+            {errors.password && (
+              <div className="field-error">{errors.password.message}</div>
+            )}
           </div>
           <button type="submit" className="auth-button" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
