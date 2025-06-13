@@ -1,13 +1,11 @@
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
 import api from "../config/axios";
 import "./Auth.css";
 
 const RegisterPage = () => {
-  const [loading, setLoading] = useState(false);
-  const [generalError, setGeneralError] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -29,25 +27,29 @@ const RegisterPage = () => {
 
   const password = watch("password");
 
-  const onSubmit = async (data) => {
-    setLoading(true);
-    setGeneralError("");
-
-    try {
-      await api.post("/users/register", {
+  const registerMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await api.post("/users/register", {
         name: data.name,
         email: data.email,
         username: data.username,
         password: data.password,
       });
+      return response.data;
+    },
+    onSuccess: () => {
       login();
       navigate("/profile");
-    } catch (err) {
+    },
+    onError: (err) => {
       const status = err.response?.status;
       const errorData = err.response?.data;
 
       if (status === 403) {
-        setGeneralError("We couldn't process your request. Please try again.");
+        setError("root", {
+          type: "server",
+          message: "We couldn't process your request. Please try again.",
+        });
       } else if (status === 409) {
         // Handle duplicate entry errors
         if (errorData.type === "/errors/conflict/duplicate-entry") {
@@ -67,18 +69,25 @@ const RegisterPage = () => {
           });
         }
       } else {
-        setGeneralError("An unexpected error occurred. Please try again.");
+        setError("root", {
+          type: "server",
+          message: "An unexpected error occurred. Please try again.",
+        });
       }
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const onSubmit = (data) => {
+    registerMutation.mutate(data);
   };
 
   return (
     <div className="auth-container">
       <div className="auth-box">
         <h1>Register</h1>
-        {generalError && <div className="error-message">{generalError}</div>}
+        {errors.root && (
+          <div className="error-message">{errors.root.message}</div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="form-group">
             <label htmlFor="name">Name</label>
@@ -175,8 +184,12 @@ const RegisterPage = () => {
               </div>
             )}
           </div>
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? "Registering..." : "Register"}
+          <button
+            type="submit"
+            className="auth-button"
+            disabled={registerMutation.isPending}
+          >
+            {registerMutation.isPending ? "Registering..." : "Register"}
           </button>
         </form>
       </div>

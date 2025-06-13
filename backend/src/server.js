@@ -51,32 +51,6 @@ const env = cleanEnv(process.env, {
 // Initialize the Express application
 const app = express();
 
-// Apply Helmet middleware to set security-related HTTP headers
-app.use(helmet());
-
-// Middleware to parse incoming requests with JSON payloads
-app.use(express.json());
-
-// Middleware to parse cookies attached to the client request object
-app.use(cookieParser());
-
-// Basic rate limiting middleware configuration
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes time window
-  max: 100, // Max 100 requests per IP within the time window
-  standardHeaders: true, // Send standard `RateLimit-*` headers
-  legacyHeaders: false, // Disable old `X-RateLimit-*` headers
-  handler: (req, res, next, optionsUsed) => {
-    const err = new Error(
-      `Too many requests from this IP, please try again after ${Math.ceil(optionsUsed.windowMs / 60000)} minutes`
-    );
-    err.name = 'RateLimitError';
-    next(err);
-  },
-});
-// Apply rate limiting to all requests
-app.use(limiter);
-
 // Configure CORS (Cross-Origin Resource Sharing)
 // Get allowed origins from environment variable, split by comma, and filter out empty strings
 const allowedOrigins = env.CORS_ORIGINS.split(',').filter(Boolean);
@@ -94,13 +68,22 @@ app.use(
       }
       return callback(null, true); // Allow if origin is whitelisted
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN'], // Allowed request headers
-    credentials: true, // Allow cookies and authorization headers to be sent
-    preflightContinue: false, // Do not pass preflight requests to other routes
-    optionsSuccessStatus: 204, // Return 204 No Content for successful OPTIONS requests
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
+
+// Apply Helmet middleware to set security-related HTTP headers
+app.use(helmet());
+
+// Middleware to parse incoming requests with JSON payloads
+app.use(express.json());
+
+// Middleware to parse cookies attached to the client request object
+app.use(cookieParser());
 
 // CSRF (Cross-Site Request Forgery) protection setup
 const csrfProtection = csrf({
@@ -136,6 +119,26 @@ app.use((req, res, next) => {
     next();
   }
 });
+
+// Basic rate limiting middleware configuration
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes time window
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res, next, optionsUsed) => {
+    const err = new Error(
+      `Too many requests from this IP, please try again after ${Math.ceil(optionsUsed.windowMs / 60000)} minutes`
+    );
+    err.name = 'RateLimitError';
+    next(err);
+  },
+});
+
+// Apply rate limiting to specific routes only
+app.use('/api/posts', limiter);
+app.use('/api/users', limiter);
+app.use('/api/comments', limiter);
 
 // Define a simple root route
 app.get('/', (req, res) => {

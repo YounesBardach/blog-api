@@ -1,39 +1,41 @@
-import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import api from "../config/axios";
-import "./Auth.css";
+import "./ProfilePage.css";
 
 const ProfilePage = () => {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await api.get("/users/profile");
-        setUserData(response.data.data.user);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load profile");
-        // If unauthorized, redirect to login
-        if (err.response?.status === 401) {
-          navigate("/login");
-        }
-      } finally {
-        setLoading(false);
+  const {
+    data: userData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const response = await api.get("/users/profile");
+      return response.data.data.user;
+    },
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes
+    retry: false, // Don't retry on 401 errors
+    onError: (error) => {
+      if (error.response?.status === 401) {
+        navigate("/login");
       }
-    };
+    },
+  });
 
-    fetchUserData();
-  }, [navigate]);
-
-  if (loading) {
+  if (isLoading) {
     return <div className="auth-container">Loading profile...</div>;
   }
 
   if (error) {
-    return <div className="auth-container error-message">{error}</div>;
+    return (
+      <div className="auth-container error-message">
+        {error.response?.data?.message || "Failed to load profile"}
+      </div>
+    );
   }
 
   return (

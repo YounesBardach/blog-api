@@ -1,40 +1,27 @@
-import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Header from "./components/Header";
-import axios from "axios";
+import api from "./config/axios";
+import "./App.css";
 
-const App = () => {
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  useEffect(() => {
-    // Fetch CSRF token when app initializes
-    axios
-      .get("http://localhost:5000/", {
-        withCredentials: true,
-      })
-      .then(() => {
-        console.log("Backend connected and CSRF token received");
-        setIsInitialized(true);
-      })
-      .catch((error) => {
-        console.error("Error connecting to backend:", error);
-        // Still set initialized to true to show error UI
-        setIsInitialized(true);
-      });
-  }, []);
-
-  if (!isInitialized) {
-    return <div>Loading...</div>;
-  }
+function App() {
+  // Use React Query to fetch CSRF token
+  useQuery({
+    queryKey: ["csrf"],
+    queryFn: () => api.get("/", { baseURL: "http://localhost:5000" }),
+    staleTime: Infinity, // CSRF token doesn't expire
+    cacheTime: Infinity, // Keep it in cache forever
+    retry: false, // Don't retry on errors
+  });
 
   return (
-    <>
+    <div className="app">
       <Header />
-      <main className="container">
+      <main className="main-content">
         <Outlet />
       </main>
-    </>
+    </div>
   );
-};
+}
 
 export default App;
