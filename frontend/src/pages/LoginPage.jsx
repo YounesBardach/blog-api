@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import api from "../config/axios";
 import "./AuthPages.css";
 
@@ -11,6 +12,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -26,8 +28,8 @@ const LoginPage = () => {
 
     try {
       await api.post("/users/login", formData);
-      // Redirect to home page after successful login
-      navigate("/");
+      login(); // Set authentication state
+      navigate("/profile");
     } catch (err) {
       setError(err.response?.data?.message || "An error occurred during login");
     } finally {

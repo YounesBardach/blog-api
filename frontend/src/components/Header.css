@@ -1,7 +1,7 @@
 .header {
-  background-color: #f8f9fa;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1rem 0;
-  border-bottom: 1px solid #e7e7e7;
 }
 
 .header .container {
@@ -17,13 +17,32 @@
   color: #333;
 }
 
+.header-nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
 .header-nav a {
-  margin-left: 1.5rem;
   text-decoration: none;
-  color: #555;
-  font-size: 1rem;
+  color: #666;
+  transition: color 0.2s;
 }
 
 .header-nav a:hover {
-  color: #007bff;
+  color: #333;
+}
+
+.header-link-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.header-link-button:hover {
+  color: #333;
 }

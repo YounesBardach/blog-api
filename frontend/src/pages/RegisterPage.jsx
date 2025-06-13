@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import api from "../config/axios";
 import "./AuthPages.css";
 
@@ -13,6 +14,7 @@ const RegisterPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -38,9 +40,8 @@ const RegisterPage = () => {
         email: formData.email,
         password: formData.password,
       });
-
-      // Redirect to home page after successful registration
-      navigate("/");
+      login(); // Set authentication state
+      navigate("/profile");
     } catch (err) {
       setError(
         err.response?.data?.message || "An error occurred during registration"
