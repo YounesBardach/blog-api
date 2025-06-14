@@ -3,7 +3,6 @@ import { useAuth } from "../hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import api from "../config/axios";
-import "./Auth.css";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -82,18 +81,30 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h1>Register</h1>
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8 bg-gray-50">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
+        <h1 className="text-2xl font-bold text-center text-gray-900 mb-8">
+          Register
+        </h1>
         {errors.root && (
-          <div className="error-message">{errors.root.message}</div>
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+            {errors.root.message}
+          </div>
         )}
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="form-group">
-            <label htmlFor="name">Name</label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Name
+            </label>
             <input
               type="text"
               id="name"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.name ? "border-red-500" : "border-gray-300"
+              }`}
               {...register("name", {
                 required: "Name is required",
                 minLength: {
@@ -101,17 +112,25 @@ const RegisterPage = () => {
                   message: "Name must be at least 2 characters",
                 },
               })}
-              className={errors.name ? "error" : ""}
             />
             {errors.name && (
-              <div className="field-error">{errors.name.message}</div>
+              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
             )}
           </div>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
+
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Email
+            </label>
             <input
               type="email"
               id="email"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.email ? "border-red-500" : "border-gray-300"
+              }`}
               {...register("email", {
                 required: "Email is required",
                 pattern: {
@@ -119,17 +138,27 @@ const RegisterPage = () => {
                   message: "Please enter a valid email address",
                 },
               })}
-              className={errors.email ? "error" : ""}
             />
             {errors.email && (
-              <div className="field-error">{errors.email.message}</div>
+              <p className="mt-1 text-sm text-red-600">
+                {errors.email.message}
+              </p>
             )}
           </div>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
+
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Username
+            </label>
             <input
               type="text"
               id="username"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.username ? "border-red-500" : "border-gray-300"
+              }`}
               {...register("username", {
                 required: "Username is required",
                 minLength: {
@@ -142,17 +171,27 @@ const RegisterPage = () => {
                     "Username can only contain lowercase letters and numbers",
                 },
               })}
-              className={errors.username ? "error" : ""}
             />
             {errors.username && (
-              <div className="field-error">{errors.username.message}</div>
+              <p className="mt-1 text-sm text-red-600">
+                {errors.username.message}
+              </p>
             )}
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Password
+            </label>
             <input
               type="password"
               id="password"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.password ? "border-red-500" : "border-gray-300"
+              }`}
               {...register("password", {
                 required: "Password is required",
                 minLength: {
@@ -160,34 +199,44 @@ const RegisterPage = () => {
                   message: "Password must be at least 6 characters",
                 },
               })}
-              className={errors.password ? "error" : ""}
             />
             {errors.password && (
-              <div className="field-error">{errors.password.message}</div>
+              <p className="mt-1 text-sm text-red-600">
+                {errors.password.message}
+              </p>
             )}
           </div>
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Confirm Password
+            </label>
             <input
               type="password"
               id="confirmPassword"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.confirmPassword ? "border-red-500" : "border-gray-300"
+              }`}
               {...register("confirmPassword", {
                 required: "Please confirm your password",
                 validate: (value) =>
                   value === password || "Passwords do not match",
               })}
-              className={errors.confirmPassword ? "error" : ""}
             />
             {errors.confirmPassword && (
-              <div className="field-error">
+              <p className="mt-1 text-sm text-red-600">
                 {errors.confirmPassword.message}
-              </div>
+              </p>
             )}
           </div>
+
           <button
             type="submit"
-            className="auth-button"
             disabled={registerMutation.isPending}
+            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {registerMutation.isPending ? "Registering..." : "Register"}
           </button>
