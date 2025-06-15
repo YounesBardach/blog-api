@@ -2,7 +2,6 @@ import { Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "./components/Header";
 import api from "./config/axios";
-import "./App.css";
 
 function App() {
   // Use React Query to fetch CSRF token
@@ -15,9 +14,9 @@ function App() {
   });
 
   return (
-    <div className="app">
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="main-content">
+      <main className="container mx-auto px-4 py-8">
         <Outlet />
       </main>
     </div>
