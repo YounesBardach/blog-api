@@ -9,7 +9,6 @@ const authorSelect = {
 
 export const findAllPosts = async () => {
   return prisma.post.findMany({
-    where: { published: true },
     include: {
       author: { select: authorSelect },
       comments: {
@@ -53,12 +52,11 @@ export const findPostById = async (postId) => {
 };
 
 export const create = async (postData, authorId) => {
-  const { title, content, published = false } = postData;
+  const { title, content } = postData;
   return prisma.post.create({
     data: {
       title,
       content,
-      published,
       author: {
         connect: { id: authorId },
       },
@@ -70,7 +68,7 @@ export const create = async (postData, authorId) => {
 };
 
 export const update = async (postId, postData, userId, userRole) => {
-  const { title, content, published } = postData;
+  const { title, content } = postData;
 
   const post = await prisma.post.findUnique({
     where: { id: postId },
@@ -112,7 +110,6 @@ export const update = async (postId, postData, userId, userRole) => {
     data: {
       title,
       content,
-      published,
     },
     include: {
       author: { select: authorSelect },

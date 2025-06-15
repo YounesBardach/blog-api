@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import api from "../config/axios";
+import { showSuccessToast, showErrorToast } from "../utils/errorHelpers";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -26,34 +27,52 @@ const LoginPage = () => {
       return response.data;
     },
     onSuccess: () => {
+      showSuccessToast("Login successful! Welcome back.");
       login();
       navigate("/profile");
     },
     onError: (error) => {
+      showErrorToast(error);
       const status = error.response?.status;
       const errorData = error.response?.data;
 
       if (status === 403) {
         setError("root", {
           type: "server",
-          message: "We couldn't process your request. Please try again.",
+          message:
+            errorData?.detail ||
+            "We couldn't process your request. Please try again.",
         });
       } else if (status === 401) {
         setError("root", {
           type: "server",
-          message: "Invalid username or password",
+          message: errorData?.detail || "Invalid username or password",
         });
       } else if (status === 400) {
         // Handle validation errors from backend
-        if (errorData.invalid_params) {
+        if (errorData?.invalid_params) {
           errorData.invalid_params.forEach(({ name, reason }) => {
             setError(name, { type: "server", message: reason });
           });
+        } else {
+          setError("root", {
+            type: "server",
+            message: errorData?.detail || "Validation failed.",
+          });
         }
+      } else if (status === 429) {
+        setError("root", {
+          type: "server",
+          message:
+            errorData?.detail || "Too many requests. Please try again later.",
+        });
       } else {
         setError("root", {
           type: "server",
-          message: "An unexpected error occurred. Please try again.",
+          message:
+            errorData?.detail ||
+            errorData?.message ||
+            "An unexpected error occurred. Please try again.",
         });
       }
     },

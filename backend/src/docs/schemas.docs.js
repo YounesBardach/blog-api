@@ -38,9 +38,7 @@
  *         content:
  *           type: string
  *           description: The post content
- *         published:
- *           type: boolean
- *           description: Whether the post is published
+
  *         authorId:
  *           type: string
  *           description: The ID of the post author

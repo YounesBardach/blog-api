@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import api from "../config/axios";
 import { AuthContext } from "./authContext";
+import { showSuccessToast, showErrorToast } from "../utils/errorHelpers";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -24,9 +25,13 @@ export const AuthProvider = ({ children }) => {
   const logoutMutation = useMutation({
     mutationFn: () => api.post("/users/logout"),
     onSuccess: () => {
+      showSuccessToast("Logged out successfully. See you next time!");
       // Remove cached user on successful logout
       setUser(null);
       queryClient.removeQueries({ queryKey: ["profile"] });
+    },
+    onError: (error) => {
+      showErrorToast(error);
     },
   });
 

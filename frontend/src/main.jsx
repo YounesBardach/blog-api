@@ -8,6 +8,9 @@ import HomePage from "./pages/HomePage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import PostDetailPage from "./pages/PostDetailPage.jsx";
+import PostEditPage from "./pages/PostEditPage.jsx";
+import PostCreatePage from "./pages/PostCreatePage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./index.css";
 
@@ -43,6 +46,26 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "posts/create",
+        element: (
+          <ProtectedRoute>
+            <PostCreatePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "posts/:id",
+        element: <PostDetailPage />,
+      },
+      {
+        path: "posts/:id/edit",
+        element: (
+          <ProtectedRoute>
+            <PostEditPage />
           </ProtectedRoute>
         ),
       },

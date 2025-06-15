@@ -83,14 +83,13 @@ export const validatePostUpdate = [
   body().custom((value, { req }) => {
     if (Object.keys(req.body).length === 0) {
       throw new Error(
-        'Request body cannot be empty. Please provide at least one field to update (title, content, or published).'
+        'Request body cannot be empty. Please provide at least one field to update (title or content).'
       );
     }
     return true;
   }),
   body('title').optional().notEmpty().withMessage('Title cannot be empty').trim().escape(),
   body('content').optional().notEmpty().withMessage('Content cannot be empty').trim().escape(),
-  body('published').optional().isBoolean().withMessage('Published must be a boolean value'),
   // Middleware to check for validation errors
   (req, res, next) => {
     const errors = validationResult(req);

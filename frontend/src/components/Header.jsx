@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { usePermissions } from "../hooks/usePermissions";
 
 const Header = () => {
   const { isAuthenticated, logout } = useAuth();
+  const { isAdmin } = usePermissions();
 
   return (
     <header className="bg-white shadow-sm">
@@ -16,6 +18,14 @@ const Header = () => {
           <nav className="hidden md:flex items-center space-x-1">
             {isAuthenticated ? (
               <>
+                {isAdmin() && (
+                  <Link
+                    to="/posts/create"
+                    className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Create Post
+                  </Link>
+                )}
                 <Link
                   to="/profile"
                   className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"

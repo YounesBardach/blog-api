@@ -9,11 +9,11 @@
  * @swagger
  * /api/posts:
  *   get:
- *     summary: Get all published posts
+ *     summary: Get all posts
  *     tags: [3. Posts]
  *     responses:
  *       200:
- *         description: A list of published posts
+ *         description: A list of posts
  *         content:
  *           application/json:
  *             schema:
@@ -103,8 +103,6 @@
  *                 type: string
  *               content:
  *                 type: string
- *               published:
- *                 type: boolean
  *     responses:
  *       201:
  *         description: Post created successfully
@@ -171,8 +169,6 @@
  *                 type: string
  *               content:
  *                 type: string
- *               published:
- *                 type: boolean
  *     responses:
  *       200:
  *         description: Post updated successfully

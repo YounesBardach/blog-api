@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import api from "../config/axios";
 import { Link } from "react-router-dom";
+import { showSuccessToast, showErrorToast } from "../utils/errorHelpers";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -38,44 +39,65 @@ const RegisterPage = () => {
       return response.data;
     },
     onSuccess: () => {
+      showSuccessToast("Registration successful! Welcome to the blog.");
       // Trigger auth state refresh and redirect
       login();
       navigate("/profile");
     },
     onError: (error) => {
-      if (error.response?.data?.message) {
-        const status = error.response?.status;
-        const errorData = error.response?.data;
+      showErrorToast(error);
+      const status = error.response?.status;
+      const errorData = error.response?.data;
 
-        if (status === 403) {
-          setError("root", {
-            type: "server",
-            message: "We couldn't process your request. Please try again.",
-          });
-        } else if (status === 409) {
-          // Handle duplicate entry errors
-          if (errorData.type === "/errors/conflict/duplicate-entry") {
-            if (errorData.fields) {
-              Object.entries(errorData.fields).forEach(([field, message]) => {
-                if (message) {
-                  setError(field, { type: "server", message });
-                }
-              });
-            }
-          }
-        } else if (status === 400) {
-          // Handle validation errors from backend
-          if (errorData.invalid_params) {
-            errorData.invalid_params.forEach(({ name, reason }) => {
-              setError(name, { type: "server", message: reason });
+      if (status === 403) {
+        setError("root", {
+          type: "server",
+          message:
+            errorData?.detail ||
+            "We couldn't process your request. Please try again.",
+        });
+      } else if (status === 409) {
+        // Handle duplicate entry errors
+        if (errorData?.type === "/errors/conflict/duplicate-entry") {
+          if (errorData.fields) {
+            Object.entries(errorData.fields).forEach(([field, message]) => {
+              if (message) {
+                setError(field, { type: "server", message });
+              }
             });
           }
         } else {
           setError("root", {
             type: "server",
-            message: "An unexpected error occurred. Please try again.",
+            message: errorData?.detail || "A duplicate entry error occurred.",
           });
         }
+      } else if (status === 400) {
+        // Handle validation errors from backend
+        if (errorData?.invalid_params) {
+          errorData.invalid_params.forEach(({ name, reason }) => {
+            setError(name, { type: "server", message: reason });
+          });
+        } else {
+          setError("root", {
+            type: "server",
+            message: errorData?.detail || "Validation failed.",
+          });
+        }
+      } else if (status === 429) {
+        setError("root", {
+          type: "server",
+          message:
+            errorData?.detail || "Too many requests. Please try again later.",
+        });
+      } else {
+        setError("root", {
+          type: "server",
+          message:
+            errorData?.detail ||
+            errorData?.message ||
+            "An unexpected error occurred. Please try again.",
+        });
       }
     },
   });
@@ -149,7 +171,13 @@ const RegisterPage = () => {
                   type="email"
                   id="email"
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${errors.email ? "border-red-300" : "border-gray-300"}`}
-                  {...register("email", { required: "Email is required" })}
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Please provide a valid email",
+                    },
+                  })}
                 />
                 {errors.email && (
                   <p className="mt-2 text-sm text-red-600">
@@ -173,6 +201,15 @@ const RegisterPage = () => {
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${errors.username ? "border-red-300" : "border-gray-300"}`}
                   {...register("username", {
                     required: "Username is required",
+                    minLength: {
+                      value: 3,
+                      message: "Username must be at least 3 characters long",
+                    },
+                    pattern: {
+                      value: /^[a-z0-9]+$/,
+                      message:
+                        "Username can only contain lowercase letters and numbers",
+                    },
                   })}
                 />
                 {errors.username && (
@@ -197,6 +234,10 @@ const RegisterPage = () => {
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${errors.password ? "border-red-300" : "border-gray-300"}`}
                   {...register("password", {
                     required: "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters long",
+                    },
                   })}
                 />
                 {errors.password && (
