@@ -44,17 +44,6 @@ export const register = async ({ name, email, username, password }) => {
     },
   });
 
-  if (!user) {
-    const error = new Error('Invalid user data during registration');
-    error.name = 'InvalidDataError';
-    error.statusCode = 400;
-    error.errors = {
-      code: 'REGISTRATION_INVALID_DATA',
-      details: 'User creation failed with provided data.',
-    };
-    throw error;
-  }
-
   const token = generateToken(user.id);
   const userResponse = {
     id: user.id,

@@ -7,7 +7,7 @@ import {
   deletePost,
 } from '../controllers/postController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { validatePostUpdate } from '../middleware/validation.middleware.js';
+import { validatePostUpdate } from '../middleware/validationMiddleware.js';
 
 const router = express.Router();
 

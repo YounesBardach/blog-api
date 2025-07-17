@@ -1,32 +1,93 @@
 import logger from '../config/logger.js';
 
-/**
- * Creates a problem details object compliant with RFC 7807.
- * @param {number} statusCode - The HTTP status code.
- * @param {string} title - A short, human-readable summary of the problem type.
- * @param {string} detail - A human-readable explanation specific to this occurrence of the problem.
- * @param {string} type - A URI identifier for the problem type.
- * @param {string} instance - A URI reference that identifies the specific occurrence of the problem.
- * @param {object} additional - Additional members for the problem details object.
- * @returns {object} The problem details object.
- */
-const createProblemDetails = (statusCode, title, detail, type, instance, additional = {}) => {
-  return {
-    type: type || 'about:blank',
-    title,
-    status: statusCode,
-    detail,
-    instance,
-    ...additional,
-  };
+const createProblemDetails = (type, title, statusCode, detail, instance, additional = {}) => ({
+  type: type || 'about:blank',
+  title,
+  statusCode,
+  detail,
+  instance,
+  ...additional,
+});
+
+const prismaErrorMap = {
+  P2002: {
+    type: '/errors/unique-constraint-violation',
+    title: 'Unique Constraint Violation',
+    statusCode: 409,
+    getDetail: (err) =>
+      `A record with the provided value for field '${err.meta?.target?.join(', ')}' already exists.`,
+    extra: (err) => ({ field: err.meta?.target }),
+  },
+  P2025: {
+    type: '/errors/record-not-found',
+    title: 'Record Not Found',
+    statusCode: 404,
+    detail: 'The requested record could not be found.',
+  },
+  P2021: {
+    type: '/errors/table-not-found',
+    title: 'Table Not Found',
+    statusCode: 404,
+    detail: 'The requested database table does not exist.',
+  },
+  P2022: {
+    type: '/errors/column-not-found',
+    title: 'Column Not Found',
+    statusCode: 404,
+    detail: 'The requested database column does not exist.',
+  },
+};
+
+const appErrorMap = {
+  MissingTokenError: {
+    type: '/errors/authentication/missing-token',
+    title: 'Authentication Token Missing',
+    statusCode: 401,
+  },
+  UserNotFoundForTokenError: {
+    type: '/errors/authentication/user-for-token-not-found',
+    title: 'User Not Found For Token',
+    statusCode: 401,
+  },
+  ForbiddenError: {
+    type: '/errors/authorization/forbidden-access',
+    title: 'Forbidden Access',
+    statusCode: 403,
+  },
+  NotFoundError: {
+    type: '/errors/resource-not-found',
+    title: 'Resource Not Found',
+    statusCode: 404,
+  },
+  DuplicateEntryError: {
+    type: '/errors/conflict/duplicate-entry',
+    title: 'Duplicate Entry',
+    statusCode: 409,
+  },
+  InvalidDataError: {
+    type: '/errors/validation/invalid-data',
+    title: 'Invalid Data',
+    statusCode: 400,
+  },
+  RelatedResourceNotFoundError: {
+    type: '/errors/validation/related-resource-not-found',
+    title: 'Related Resource Not Found',
+    statusCode: 400,
+  },
+  CookieError: {
+    type: '/errors/cookie-error',
+    title: 'Cookie Processing Error',
+    statusCode: 500,
+  },
 };
 
 const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
+  const instance = req.originalUrl;
   const originalMessage = err.message || 'An unexpected error occurred.';
   let problemDetails;
 
-  // Normalize err.errors early to avoid repetition
+  // --- Normalized additional details ---
   const additionalErrorDetails =
     typeof err.errors === 'object' && err.errors !== null
       ? { ...err.errors }
@@ -34,74 +95,31 @@ const errorHandler = (err, req, res, next) => {
         ? { details: err.errors }
         : {};
 
-  // --- Error Classification ---
-
-  // Prisma errors
+  // --- Prisma DB errors ---
   if (err.code && typeof err.code === 'string' && err.code.startsWith('P')) {
-    const instance = req.originalUrl;
-    switch (err.code) {
-      case 'P2002':
-        statusCode = 409;
-        problemDetails = createProblemDetails(
-          statusCode,
-          'Unique Constraint Violation',
-          `A record with the provided value for field '${err.meta?.target?.join(', ')}' already exists.`,
-          '/errors/unique-constraint-violation',
-          instance,
-          { field: err.meta?.target }
-        );
-        break;
-      case 'P2025':
-        statusCode = 404;
-        problemDetails = createProblemDetails(
-          statusCode,
-          'Record Not Found',
-          'The requested record could not be found.',
-          '/errors/record-not-found',
-          instance
-        );
-        break;
-      case 'P2021':
-        statusCode = 404;
-        problemDetails = createProblemDetails(
-          statusCode,
-          'Table Not Found',
-          'The requested database table does not exist.',
-          '/errors/table-not-found',
-          instance
-        );
-        break;
-      case 'P2022':
-        statusCode = 404;
-        problemDetails = createProblemDetails(
-          statusCode,
-          'Column Not Found',
-          'The requested database column does not exist.',
-          '/errors/column-not-found',
-          instance
-        );
-        break;
-      default:
-        statusCode = 500;
-        problemDetails = createProblemDetails(
-          statusCode,
-          'Database Error',
-          'An unexpected database error occurred.',
-          '/errors/database-error',
-          instance,
-          { code: err.code }
-        );
+    const mapping = prismaErrorMap[err.code];
+    if (mapping) {
+      statusCode = mapping.statusCode;
+      problemDetails = createProblemDetails(
+        mapping.type,
+        mapping.title,
+        statusCode,
+        mapping.detail || mapping.getDetail?.(err),
+        instance,
+        mapping.extra ? mapping.extra(err) : {}
+      );
     }
   }
-  // Validation errors (from express-validator)
+
+  // --- Express-validator errors ---
   else if (err.name === 'ValidationError' && Array.isArray(err.errors)) {
     statusCode = 400;
     problemDetails = createProblemDetails(
-      statusCode,
-      'Validation Error',
-      err.message || 'Input validation failed.',
       '/errors/validation-error',
-      req.originalUrl,
+      'Validation Error',
+      statusCode,
+      err.message || 'Input validation failed.',
+      instance,
       {
         invalid_params: err.errors.map((valError) => ({
           name: valError.path,
@@ -111,199 +129,137 @@ const errorHandler = (err, req, res, next) => {
       }
     );
   }
-  // JWT library errors
+
+  // --- JWT, CSRF, RateLimit, CORS errors ---
   else if (err.name === 'JsonWebTokenError') {
     statusCode = 401;
     problemDetails = createProblemDetails(
-      statusCode,
-      'Invalid Token',
-      'The provided token is invalid or malformed.',
       '/errors/authentication/invalid-token',
-      req.originalUrl
+      'Invalid Token',
+      statusCode,
+      'The provided token is invalid or malformed.',
+      instance
     );
   } else if (err.name === 'TokenExpiredError') {
     statusCode = 401;
     problemDetails = createProblemDetails(
-      statusCode,
-      'Token Expired',
-      'The provided token has expired.',
       '/errors/authentication/token-expired',
-      req.originalUrl
+      'Token Expired',
+      statusCode,
+      'The provided token has expired.',
+      instance
     );
-  }
-  // CSRF errors
-  else if (err.code === 'EBADCSRFTOKEN') {
+  } else if (err.code === 'EBADCSRFTOKEN') {
     statusCode = 403;
     problemDetails = createProblemDetails(
-      statusCode,
-      'Invalid CSRF Token',
-      'The CSRF token is invalid or missing.',
       '/errors/security/invalid-csrf-token',
-      req.originalUrl
+      'Invalid CSRF Token',
+      statusCode,
+      'The CSRF token is invalid or missing.',
+      instance
     );
-  }
-  // Rate limiting errors
-  else if (err.name === 'RateLimitError') {
+  } else if (err.name === 'RateLimitError') {
     statusCode = 429;
     problemDetails = createProblemDetails(
-      statusCode,
-      'Rate Limit Exceeded',
-      originalMessage || 'You have exceeded the request rate limit.',
       '/errors/rate-limit-exceeded',
-      req.originalUrl
+      'Rate Limit Exceeded',
+      statusCode,
+      originalMessage,
+      instance
     );
-  }
-  // CORS errors
-  else if (originalMessage.includes('CORS policy')) {
+  } else if (originalMessage.includes('CORS policy')) {
     statusCode = 403;
     problemDetails = createProblemDetails(
-      statusCode,
-      'CORS Error',
-      'This request was blocked by a CORS policy.',
       '/errors/security/cors-violation',
-      req.originalUrl
+      'CORS Error',
+      statusCode,
+      'This request was blocked by a CORS policy.',
+      instance
     );
   }
-  // Specific Application Errors (using a map for cleaner handling)
-  else {
-    const errorNameToProblemMap = {
-      MissingTokenError: {
-        statusCode: 401,
-        title: 'Authentication Token Missing',
-        type: '/errors/authentication/missing-token',
-      },
-      UserNotFoundForTokenError: {
-        statusCode: 401,
-        title: 'User Not Found For Token',
-        type: '/errors/authentication/user-for-token-not-found',
-      },
-      TokenVerificationError: {
-        statusCode: 401,
-        title: 'Token Verification Failed',
-        type: '/errors/authentication/token-verification-failed',
-      },
-      ForbiddenError: {
-        statusCode: 403,
-        title: 'Forbidden Access',
-        type: '/errors/authorization/forbidden-access',
-      },
-      NotFoundError: {
-        statusCode: 404,
-        title: 'Resource Not Found',
-        type: '/errors/resource-not-found',
-      },
-      DuplicateEntryError: {
-        statusCode: 409,
-        title: 'Duplicate Entry',
-        type: '/errors/conflict/duplicate-entry',
-      },
-      InvalidDataError: {
-        statusCode: 400,
-        title: 'Invalid Data',
-        type: '/errors/validation/invalid-data',
-      },
-      RelatedResourceNotFoundError: {
-        statusCode: 400,
-        title: 'Related Resource Not Found',
-        type: '/errors/validation/related-resource-not-found',
-      },
-      CookieError: {
-        statusCode: 500,
-        title: 'Cookie Processing Error',
-        type: '/errors/cookie-error',
-      },
-    };
 
-    const mapping = errorNameToProblemMap[err.name];
+  // --- Custom application errors via map ---
+  else {
+    const mapping = appErrorMap[err.name];
     if (mapping) {
       statusCode = err.statusCode || mapping.statusCode;
       problemDetails = createProblemDetails(
-        statusCode,
-        mapping.title,
-        originalMessage,
         mapping.type,
-        req.originalUrl,
+        mapping.title,
+        statusCode,
+        originalMessage,
+        instance,
         additionalErrorDetails
       );
     }
   }
 
-  // Fallback for truly unexpected errors
+  // --- Fallback for unknown errors ---
   if (!problemDetails) {
     const title = err.name && err.name !== 'Error' ? err.name : 'Unknown Error';
     const type = `/errors/${(err.name || 'unknown').toLowerCase().replace(/error$/, '')}`;
     problemDetails = createProblemDetails(
-      statusCode,
-      title,
-      originalMessage,
       type,
-      req.originalUrl,
+      title,
+      statusCode,
+      originalMessage,
+      instance,
       additionalErrorDetails
     );
   }
 
-  // --- Response Finalization ---
-
-  // Production safety for 500-level errors: obscure sensitive details
+  // --- Environment-specific adjustments ---
   if (statusCode >= 500 && process.env.NODE_ENV === 'production') {
-    const finalMessage = 'An unexpected error occurred. We are looking into it.';
     problemDetails = createProblemDetails(
-      500,
-      'Internal Server Error',
-      finalMessage,
       '/errors/internal-server-error',
-      req.originalUrl
+      'Internal Server Error',
+      500,
+      'An unexpected error occurred. We are looking into it.',
+      instance
     );
-  }
-  // Development: Add stack to 500-level errors for easier debugging
-  else if (statusCode >= 500 && process.env.NODE_ENV !== 'production') {
+  } else if (process.env.NODE_ENV !== 'production') {
     problemDetails.stack = err.stack;
   }
 
-  // Calculate status string based on final statusCode, done once
-  const status = statusCode < 500 ? 'fail' : 'error';
+  // --- Final payload ---
+  const outcome = statusCode < 500 ? 'fail' : 'error';
+  const payload = {
+    success: false,
+    outcome,
+    ...problemDetails,
+  };
 
-  // Log the comprehensive error details for debugging and monitoring
   logger.error(originalMessage, {
     statusCode,
-    status,
-    responsePayload: problemDetails, // This is what the client gets
+    outcome,
+    responsePayload: payload,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
     originalError: {
       message: err.message,
       name: err.name,
       code: err.code,
     },
-    stack: err.stack, // Full stack always logged
-    url: req.originalUrl,
-    method: req.method,
-    ip: req.ip,
   });
 
-  // Send the final error response to the client
-  res.status(statusCode).json({
-    success: false,
-    status,
-    ...problemDetails,
-  });
+  res.status(statusCode).json(payload);
 };
 
-// Example response:
-// {
-//   success: false,
-//   status: "fail" | "error", // based on statusCode < 500
-//   type: "/errors/validation-error", // URI reference for error type
-//   title: "Validation Error", // short human-readable title
-//   status: 400, // HTTP status code
-//   detail: "Input validation failed.", // human-readable explanation
-//   instance: "/api/resource/path", // request path where error occurred
-//   invalid_params: [  // Optional: field-level validation details
-//     {
-//       name: "email",
-//       reason: "Invalid email format",
-//       value: "not-an-email"
-//     }
-//   ],
-//   stack: "Error: ...\n at ..." // included only in non-production environments
-// }
-
 export default errorHandler;
+
+/*
+Example error response:
+{
+  "success": false,
+  "outcome": "fail",
+  "type": "/errors/validation-error",
+  "title": "Validation Error",
+  "status": 400,
+  "detail": "Input validation failed.",
+  "instance": "/api/comments/post/123",
+  "invalid_params": [...],
+  "stack": "Error: ... at ..." // only in dev
+}
+*/

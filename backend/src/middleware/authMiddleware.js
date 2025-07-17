@@ -3,10 +3,8 @@ import asyncHandler from 'express-async-handler';
 import prisma from '../config/prisma.js';
 
 export const protect = asyncHandler(async (req, res, next) => {
-  let token;
-
   // Get token from cookie
-  token = req.cookies.jwt;
+  let token = req.cookies.jwt;
 
   if (!token) {
     const error = new Error('Not authorized, no token');
@@ -49,12 +47,6 @@ export const protect = asyncHandler(async (req, res, next) => {
 
     next();
   } catch (error) {
-    if (!error.statusCode) {
-      error.statusCode = 401;
-    }
-    if (!error.name || error.name === 'Error') {
-      error.name = 'TokenVerificationError';
-    }
     return next(error);
   }
 });

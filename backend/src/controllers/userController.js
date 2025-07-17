@@ -57,12 +57,7 @@ export const logoutUser = asyncHandler(async (req, res, next) => {
       code: 'COOKIE_CLEAR_FAILURE',
       details: cookieError.message,
     };
-    // Unlike setAuthCookie, here we call next(error) because logoutUser is an async route handler.
-    // If we just `throw error`, asyncHandler might not catch it in the same way as a sync function.
-    // Or, to be absolutely sure with asyncHandler, we could make logoutUser not an asyncHandler
-    // and call next(error) explicitly, or ensure setAuthCookie also calls next(error).
-    // For now, direct next(error) is safest within an asyncHandler for explicit error passing.
-    return next(error);
+    throw error;
   }
 });
 

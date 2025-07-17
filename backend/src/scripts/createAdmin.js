@@ -8,17 +8,14 @@ const createAdmin = async () => {
       email: 'jojo@gmail.com',
       username: 'jojo',
       password: 'Jojo123!',
-      role: 'ADMIN'
+      role: 'ADMIN',
     };
 
     // Check if admin already exists
     const existingAdmin = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: adminData.email },
-          { username: adminData.username }
-        ]
-      }
+        OR: [{ email: adminData.email }, { username: adminData.username }],
+      },
     });
 
     if (existingAdmin) {
@@ -37,8 +34,8 @@ const createAdmin = async () => {
         email: adminData.email,
         username: adminData.username,
         passwordHash,
-        role: adminData.role
-      }
+        role: adminData.role,
+      },
     });
 
     console.log('Admin user created successfully!');
@@ -46,7 +43,6 @@ const createAdmin = async () => {
     console.log('Username:', adminData.username);
     console.log('Password:', adminData.password);
     console.log('Email:', adminData.email);
-
   } catch (error) {
     console.error('Error creating admin user:', error);
   } finally {
@@ -54,4 +50,4 @@ const createAdmin = async () => {
   }
 };
 
-createAdmin(); 
+createAdmin();

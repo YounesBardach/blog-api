@@ -19,12 +19,12 @@ export const createPost = asyncHandler(async (req, res, next) => {
 
 export const updatePost = asyncHandler(async (req, res, next) => {
   // req.user is attached by the 'protect' middleware
-  const updatedPost = await postService.update(req.params.id, req.body, req.user.id, req.user.role);
+  const updatedPost = await postService.update(req.params.id, req.body);
   res.status(200).json({ success: true, status: 'success', data: { post: updatedPost } });
 });
 
 export const deletePost = asyncHandler(async (req, res, next) => {
   // req.user is attached by the 'protect' middleware
-  await postService.remove(req.params.id, req.user.id, req.user.role);
+  await postService.remove(req.params.id);
   res.status(200).json({ success: true, status: 'success', data: { message: 'Post removed' } });
-}); 
+});

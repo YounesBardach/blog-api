@@ -6,7 +6,7 @@ import {
   getPostComments,
 } from '../controllers/commentController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import { validateCommentUpdate } from '../middleware/validation.middleware.js';
+import { validateCommentUpdate } from '../middleware/validationMiddleware.js';
 
 const router = express.Router();
 

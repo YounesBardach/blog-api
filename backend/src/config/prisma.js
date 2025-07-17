@@ -1,4 +1,8 @@
-import { PrismaClient } from '../../node_modules/.prisma/client/index.js';
+import { PrismaClient } from '../generated/prisma/index.js';
+
+// Create a single instance of PrismaClient
+// - In production: create a new instance normally
+// - In development: reuse the same instance across hot reloads to avoid exhausting the database connection pool
 
 let prisma;
 

@@ -30,7 +30,7 @@ export const findPostById = async (postId) => {
         include: {
           author: { select: authorSelect },
         },
-        orderBy: { createdAt: 'desc' }, // Order comments within the post
+        orderBy: { createdAt: 'desc' },
       },
     },
   });
@@ -67,7 +67,7 @@ export const create = async (postData, authorId) => {
   });
 };
 
-export const update = async (postId, postData, userId, userRole) => {
+export const update = async (postId, postData) => {
   const { title, content } = postData;
 
   const post = await prisma.post.findUnique({
@@ -88,23 +88,6 @@ export const update = async (postId, postData, userId, userRole) => {
     throw error;
   }
 
-  // Authorization check
-  if (post.authorId !== userId && userRole !== 'ADMIN') {
-    const error = new Error('Not authorized to update this post');
-    error.name = 'ForbiddenError';
-    error.statusCode = 403;
-    error.errors = {
-      resource: 'post',
-      id: postId,
-      operation: 'update_post',
-      code: 'UNAUTHORIZED_POST_UPDATE',
-      requiredRole: 'ADMIN',
-      userRole,
-      details: 'User is not the author or an admin.',
-    };
-    throw error;
-  }
-
   return prisma.post.update({
     where: { id: postId },
     data: {
@@ -117,7 +100,7 @@ export const update = async (postId, postData, userId, userRole) => {
   });
 };
 
-export const remove = async (postId, userId, userRole) => {
+export const remove = async (postId) => {
   const post = await prisma.post.findUnique({
     where: { id: postId },
   });
@@ -132,23 +115,6 @@ export const remove = async (postId, userId, userRole) => {
       operation: 'delete_post',
       code: 'POST_NOT_FOUND',
       details: `Post with ID '${postId}' was not found.`,
-    };
-    throw error;
-  }
-
-  // Authorization check
-  if (post.authorId !== userId && userRole !== 'ADMIN') {
-    const error = new Error('Not authorized to delete this post');
-    error.name = 'ForbiddenError';
-    error.statusCode = 403;
-    error.errors = {
-      resource: 'post',
-      id: postId,
-      operation: 'delete_post',
-      code: 'UNAUTHORIZED_POST_DELETE',
-      requiredRole: 'ADMIN',
-      userRole,
-      details: 'User is not the author or an admin.',
     };
     throw error;
   }

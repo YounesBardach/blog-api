@@ -6,7 +6,7 @@ import {
   logoutUser,
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import { validateRegistration, validateLogin } from '../middleware/validation.middleware.js';
+import { validateRegistration, validateLogin } from '../middleware/validationMiddleware.js';
 
 const router = express.Router();
 
