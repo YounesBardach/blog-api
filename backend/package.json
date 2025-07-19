@@ -25,6 +25,9 @@
     "type": "git",
     "url": "git+https://github.com/YounesBardach/blog-api.git"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

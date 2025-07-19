@@ -262,4 +262,13 @@ Example error response:
   "invalid_params": [...],
   "stack": "Error: ... at ..." // only in dev
 }
+payload contains:
+- success: false
+- outcome: 'fail' or 'error'
+- type: '/errors/validation-error'
+- title: 'Validation Error'
+- status: 400
+- detail: 'Input validation failed.'
+
+So payload, additionals and the stack in dev
 */

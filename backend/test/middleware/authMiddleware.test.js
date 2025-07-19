@@ -1,212 +1,122 @@
-import { vi } from 'vitest';
 import jwt from 'jsonwebtoken';
-import { protect, admin } from '../../src/middleware/authMiddleware.js';
+import { protect, admin } from '../src/middleware/authMiddleware.js';
 import { prisma } from '../setup.js';
-import { createTestUser, generateTestToken } from '../helpers/testHelpers.js';
 
-// Mock response and next function
-const mockResponse = () => {
-  const res = {};
-  res.status = vi.fn().mockReturnValue(res);
-  res.json = vi.fn().mockReturnValue(res);
-  return res;
-};
-
-const mockNext = vi.fn();
-
-describe('Auth Middleware', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+describe('Authentication Middleware', () => {
+  const createMockReq = (cookieValue) => ({
+    cookies: { jwt: cookieValue },
   });
 
+  const createMockRes = () => ({});
+
+  const createMockNext = () => vi.fn();
+
   describe('protect middleware', () => {
-    let testUser;
-    let validToken;
+    beforeEach(() => {
+      vi.clearAllMocks();
+      jwt.verify = vi.fn();
+    });
 
-    beforeEach(async () => {
-      testUser = await createTestUser({
-        email: 'auth@example.com',
-        username: 'authuser',
+    it('allow access if valid token/user', async () => {
+      const mockUser = {
+        id: '123',
+        name: 'testuser',
+        email: 'test@example.com',
+        username: 'testuser',
+        role: 'READER',
+      };
+
+      // Mock jwt.verify and prisma user lookup
+      jwt.verify.mockReturnValue({ id: '123' });
+      prisma.user.findUnique = vi.fn().mockResolvedValue(mockUser);
+
+      const req = createMockReq('valid.jwt.token');
+      const res = createMockRes();
+      const next = createMockNext();
+
+      await protect(req, res, next);
+
+      expect(req.user).toEqual(mockUser);
+      expect(next).toHaveBeenCalledWith(); // no error
+    });
+
+    it('calls next with error if no token is present', async () => {
+      const req = createMockReq(undefined);
+      const res = createMockRes();
+      const next = createMockNext();
+
+      await protect(req, res, next);
+
+      // next.mock.calls[0][0] is the first argument passed to the next function
+      const error = next.mock.calls[0][0];
+      expect(error.statusCode).toBe(401);
+      expect(error.name).toBe('MissingTokenError');
+    });
+
+    it('calls next with error if token is invalid', async () => {
+      jwt.verify.mockImplementation(() => {
+        throw new Error('invalid token');
       });
-      validToken = generateTestToken(testUser.id);
+
+      const req = createMockReq('invalid.token');
+      const res = createMockRes();
+      const next = createMockNext();
+
+      await protect(req, res, next);
+
+      const error = next.mock.calls[0][0];
+      expect(error.message).toBe('invalid token');
     });
 
-    it('should authenticate user with valid token', async () => {
-      const req = {
-        headers: {
-          authorization: `Bearer ${validToken}`,
-        },
-      };
-      const res = mockResponse();
+    it('calls next with error if user not found', async () => {
+      jwt.verify.mockReturnValue({ id: 'not-found' });
+      prisma.user.findUnique = vi.fn().mockResolvedValue(null);
 
-      await protect(req, res, mockNext);
+      const req = createMockReq('valid.token.but.user.missing');
+      const res = createMockRes();
+      const next = createMockNext();
 
-      expect(req.user).toBeDefined();
-      expect(req.user.id).toBe(testUser.id);
-      expect(req.user.email).toBe(testUser.email);
-      expect(mockNext).toHaveBeenCalled();
-      expect(res.status).not.toHaveBeenCalled();
-    });
+      await protect(req, res, next);
 
-    it('should reject request without authorization header', async () => {
-      const req = {
-        headers: {},
-      };
-      const res = mockResponse();
-
-      await protect(req, res, mockNext);
-
-      expect(req.user).toBeUndefined();
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          success: false,
-          message: expect.stringContaining('Not authorized'),
-        })
-      );
-      expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it('should reject request with malformed authorization header', async () => {
-      const req = {
-        headers: {
-          authorization: 'InvalidFormat',
-        },
-      };
-      const res = mockResponse();
-
-      await protect(req, res, mockNext);
-
-      expect(req.user).toBeUndefined();
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it('should reject request with invalid token', async () => {
-      const req = {
-        headers: {
-          authorization: 'Bearer invalidtoken',
-        },
-      };
-      const res = mockResponse();
-
-      await protect(req, res, mockNext);
-
-      expect(req.user).toBeUndefined();
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it('should reject request with expired token', async () => {
-      const expiredToken = jwt.sign(
-        { id: testUser.id },
-        process.env.JWT_SECRET,
-        { expiresIn: '-1h' } // Expired 1 hour ago
-      );
-
-      const req = {
-        headers: {
-          authorization: `Bearer ${expiredToken}`,
-        },
-      };
-      const res = mockResponse();
-
-      await protect(req, res, mockNext);
-
-      expect(req.user).toBeUndefined();
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it('should reject request for non-existent user', async () => {
-      const tokenForNonExistentUser = generateTestToken(999999);
-
-      const req = {
-        headers: {
-          authorization: `Bearer ${tokenForNonExistentUser}`,
-        },
-      };
-      const res = mockResponse();
-
-      await protect(req, res, mockNext);
-
-      expect(req.user).toBeUndefined();
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(mockNext).not.toHaveBeenCalled();
+      const error = next.mock.calls[0][0];
+      expect(error.statusCode).toBe(401);
+      expect(error.name).toBe('UserNotFoundForTokenError');
     });
   });
 
   describe('admin middleware', () => {
-    it('should allow access for admin user', async () => {
-      const adminUser = await createTestUser({
-        email: 'admin@example.com',
-        username: 'adminuser',
-        role: 'ADMIN',
-      });
+    it('calls next if user is admin', () => {
+      const req = { user: { role: 'ADMIN' } };
+      const res = {};
+      const next = createMockNext();
 
-      const req = {
-        user: adminUser,
-      };
-      const res = mockResponse();
+      admin(req, res, next);
 
-      admin(req, res, mockNext);
-
-      expect(mockNext).toHaveBeenCalled();
-      expect(res.status).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith();
     });
 
-    it('should deny access for regular user', async () => {
-      const regularUser = await createTestUser({
-        email: 'regular@example.com',
-        username: 'regularuser',
-        role: 'USER',
-      });
+    it('calls next with error if user is not admin', () => {
+      const req = { user: { role: 'READER' } };
+      const res = {};
+      const next = createMockNext();
 
-      const req = {
-        user: regularUser,
-      };
-      const res = mockResponse();
+      admin(req, res, next);
 
-      admin(req, res, mockNext);
-
-      expect(mockNext).not.toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          success: false,
-          message: expect.stringContaining('Admin access required'),
-        })
-      );
+      const error = next.mock.calls[0][0];
+      expect(error.statusCode).toBe(403);
+      expect(error.name).toBe('ForbiddenError');
     });
 
-    it('should deny access when user is not set', async () => {
+    it('calls next with error if req.user is missing', () => {
       const req = {};
-      const res = mockResponse();
+      const res = {};
+      const next = createMockNext();
 
-      admin(req, res, mockNext);
+      admin(req, res, next);
 
-      expect(mockNext).not.toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(403);
-    });
-
-    it('should deny access for user without role', async () => {
-      const userWithoutRole = await createTestUser({
-        email: 'norole@example.com',
-        username: 'noroleuser',
-      });
-
-      // Remove role property to simulate edge case
-      delete userWithoutRole.role;
-
-      const req = {
-        user: userWithoutRole,
-      };
-      const res = mockResponse();
-
-      admin(req, res, mockNext);
-
-      expect(mockNext).not.toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(403);
+      const error = next.mock.calls[0][0];
+      expect(error.statusCode).toBe(403);
+      expect(error.name).toBe('ForbiddenError');
     });
   });
 });
