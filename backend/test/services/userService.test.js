@@ -1,196 +1,159 @@
+import * as userService from '../src/services/userService.js';
 import bcrypt from 'bcryptjs';
-import { register, login, findUserProfileById } from '../../src/services/userService.js';
-import { prisma } from '../setup.js';
-import { createTestUser } from '../helpers/testHelpers.js';
 
-describe('User Service', () => {
-  describe('register', () => {
-    it('should register a new user successfully', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        username: 'johndoe',
-        password: 'password123',
-      };
+// --- Mock Prisma ---
+vi.mock('../src/config/prisma.js', () => ({
+  default: {
+    user: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+    },
+  },
+}));
 
-      const result = await register(userData);
+// --- Mock JWT ---
+// Any jwt function will return mock-token
+vi.mock('jsonwebtoken', () => ({
+  sign: vi.fn(() => 'mock-token'),
+}));
+// When need to reimport for the mock to work because prisma executes before the mock in userService.js and creates a real prisma instance
+const prisma = (await import('../src/config/prisma.js')).default;
 
-      expect(result).toHaveProperty('user');
-      expect(result).toHaveProperty('token');
-      expect(result.user.email).toBe(userData.email);
-      expect(result.user.username).toBe(userData.username);
-      expect(result.user.name).toBe(userData.name);
-      expect(result.user).not.toHaveProperty('passwordHash');
-      expect(result.user).not.toHaveProperty('password');
+let sampleUser;
 
-      // Verify user was created in database
-      const dbUser = await prisma.user.findUnique({
-        where: { email: userData.email },
-      });
-      expect(dbUser).toBeTruthy();
-      expect(dbUser.email).toBe(userData.email);
+beforeEach(async () => {
+  vi.clearAllMocks();
 
-      // Verify password was hashed
-      const passwordMatch = await bcrypt.compare(userData.password, dbUser.passwordHash);
-      expect(passwordMatch).toBe(true);
+  sampleUser = {
+    id: 'user-123',
+    name: 'Test',
+    email: 'test@email.com',
+    username: 'testuser',
+    passwordHash: await bcrypt.hash('Test123!', 10),
+    role: 'READER',
+  };
+});
+
+describe('userService', () => {
+  test('registers a new user if not taken', async () => {
+    prisma.user.findFirst.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue(sampleUser);
+
+    const result = await userService.register({
+      name: sampleUser.name,
+      email: sampleUser.email,
+      username: sampleUser.username,
+      password: 'Test123!',
     });
 
-    it('should throw error for duplicate email', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        username: 'johndoe',
-        password: 'password123',
-      };
-
-      // Create first user
-      await register(userData);
-
-      // Try to create user with same email
-      const duplicateData = {
-        ...userData,
-        username: 'johndoe2',
-      };
-
-      await expect(register(duplicateData)).rejects.toThrow('User already exists');
-    });
-
-    it('should throw error for duplicate username', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        username: 'johndoe',
-        password: 'password123',
-      };
-
-      // Create first user
-      await register(userData);
-
-      // Try to create user with same username
-      const duplicateData = {
-        ...userData,
-        email: 'john2@example.com',
-      };
-
-      await expect(register(duplicateData)).rejects.toThrow('User already exists');
-    });
-
-    it('should set default role as USER', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        username: 'johndoe',
-        password: 'password123',
-      };
-
-      const result = await register(userData);
-
-      expect(result.user.role).toBe('USER');
+    expect(prisma.user.findFirst).toHaveBeenCalled();
+    expect(prisma.user.create).toHaveBeenCalled();
+    expect(result).toEqual({
+      user: {
+        id: sampleUser.id,
+        name: sampleUser.name,
+        email: sampleUser.email,
+        username: sampleUser.username,
+        role: sampleUser.role,
+      },
+      token: 'mock-token',
     });
   });
 
-  describe('login', () => {
-    let testUser;
-    const testPassword = 'password123';
-
-    beforeEach(async () => {
-      testUser = await createTestUser({
-        email: 'login@example.com',
-        username: 'loginuser',
-        password: await bcrypt.hash(testPassword, 12),
-      });
+  test('throws error if user already exists', async () => {
+    prisma.user.findFirst.mockResolvedValue({
+      email: sampleUser.email,
+      username: sampleUser.username,
     });
 
-    it('should login user with valid credentials', async () => {
-      const loginData = {
-        username: 'loginuser',
-        password: testPassword,
-      };
-
-      const result = await login(loginData);
-
-      expect(result).toHaveProperty('user');
-      expect(result).toHaveProperty('token');
-      expect(result.user.username).toBe(testUser.username);
-      expect(result.user.email).toBe(testUser.email);
-      expect(result.user).not.toHaveProperty('passwordHash');
-      expect(result.user).not.toHaveProperty('password');
-    });
-
-    it('should throw error for non-existent user', async () => {
-      const loginData = {
-        username: 'nonexistent',
-        password: testPassword,
-      };
-
-      await expect(login(loginData)).rejects.toThrow('Invalid credentials');
-    });
-
-    it('should throw error for wrong password', async () => {
-      const loginData = {
-        username: 'loginuser',
-        password: 'wrongpassword',
-      };
-
-      await expect(login(loginData)).rejects.toThrow('Invalid credentials');
-    });
-
-    it('should return authentication error with proper structure', async () => {
-      const loginData = {
-        username: 'nonexistent',
-        password: 'wrongpassword',
-      };
-
-      try {
-        await login(loginData);
-      } catch (error) {
-        expect(error.name).toBe('AuthenticationError');
-        expect(error.statusCode).toBe(401);
-        expect(error.errors).toHaveProperty('code', 'INVALID_CREDENTIALS');
-      }
+    await expect(
+      userService.register({
+        name: 'Another',
+        email: sampleUser.email,
+        username: sampleUser.username,
+        password: 'Pass123!',
+      })
+    ).rejects.toMatchObject({
+      name: 'DuplicateEntryError',
+      statusCode: 409,
+      errors: {
+        fields: {
+          email: 'Email already in use',
+          username: 'Username already taken',
+        },
+      },
     });
   });
 
-  describe('findUserProfileById', () => {
-    let testUser;
+  test('logs in a valid user', async () => {
+    prisma.user.findUnique.mockResolvedValue(sampleUser);
 
-    beforeEach(async () => {
-      testUser = await createTestUser({
-        email: 'profile@example.com',
-        username: 'profileuser',
-      });
+    const result = await userService.login({
+      username: sampleUser.username,
+      password: 'Test123!',
     });
 
-    it('should find user profile by valid id', async () => {
-      const result = await findUserProfileById(testUser.id);
+    expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      where: { username: sampleUser.username },
+    });
+    expect(result.user.username).toBe(sampleUser.username);
+    expect(result.token).toBe('mock-token');
+  });
 
-      expect(result).toHaveProperty('id', testUser.id);
-      expect(result).toHaveProperty('email', testUser.email);
-      expect(result).toHaveProperty('username', testUser.username);
-      expect(result).toHaveProperty('role', testUser.role);
-      expect(result).toHaveProperty('createdAt');
-      expect(result).not.toHaveProperty('passwordHash');
-      expect(result).not.toHaveProperty('password');
+  test('throws if login credentials are invalid (no user)', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+
+    await expect(
+      userService.login({ username: 'wronguser', password: 'wrongpass' })
+    ).rejects.toMatchObject({
+      name: 'AuthenticationError',
+      statusCode: 401,
+    });
+  });
+
+  test('throws if login credentials are invalid (bad password)', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      ...sampleUser,
+      passwordHash: await bcrypt.hash('AnotherPass123!', 10),
     });
 
-    it('should throw error for non-existent user id', async () => {
-      const nonExistentId = 999999;
-
-      await expect(findUserProfileById(nonExistentId)).rejects.toThrow('User not found');
+    await expect(
+      userService.login({ username: sampleUser.username, password: 'WrongPassword!' })
+    ).rejects.toMatchObject({
+      name: 'AuthenticationError',
+      statusCode: 401,
     });
+  });
 
-    it('should return not found error with proper structure', async () => {
-      const nonExistentId = 999999;
+  test('retrieves user profile by ID', async () => {
+    const profile = {
+      id: sampleUser.id,
+      name: sampleUser.name,
+      email: sampleUser.email,
+      username: sampleUser.username,
+      role: sampleUser.role,
+      createdAt: new Date(),
+    };
 
-      try {
-        await findUserProfileById(nonExistentId);
-      } catch (error) {
-        expect(error.name).toBe('NotFoundError');
-        expect(error.statusCode).toBe(404);
-        expect(error.errors).toHaveProperty('code', 'USER_NOT_FOUND');
-        expect(error.errors).toHaveProperty('resource', 'user');
-        expect(error.errors).toHaveProperty('id', nonExistentId);
-      }
+    prisma.user.findUnique.mockResolvedValue(profile);
+
+    const result = await userService.findUserProfileById(sampleUser.id);
+    expect(result).toMatchObject({
+      id: sampleUser.id,
+      username: sampleUser.username,
+    });
+  });
+
+  test('throws if user profile not found', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+
+    await expect(userService.findUserProfileById('nonexistent')).rejects.toMatchObject({
+      name: 'NotFoundError',
+      statusCode: 404,
+      errors: {
+        code: 'USER_NOT_FOUND',
+      },
     });
   });
 });
