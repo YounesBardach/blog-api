@@ -158,6 +158,18 @@ app.use('/api/comments', limiter, commentRoutes);
 // Serve Swagger API documentation at /api-docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
 
+// 404 handler for unmatched routes
+app.use((req, res, next) => {
+  const err = new Error(`Route ${req.originalUrl} not found`);
+  err.name = 'NotFoundError';
+  err.statusCode = 404;
+  err.errors = {
+    resource: 'route',
+    code: 'ROUTE_NOT_FOUND',
+  };
+  next(err);
+});
+
 // Apply the global error handling middleware (must be last middleware)
 app.use(errorHandler);
 
