@@ -1,6 +1,16 @@
 import jwt from 'jsonwebtoken';
-import { protect, admin } from '../src/middleware/authMiddleware.js';
-import { prisma } from '../setup.js';
+import { protect, admin } from '../../src/middleware/authMiddleware.js';
+
+// Mock the prisma module that the middleware actually uses
+vi.mock('../../src/config/prisma.js', () => ({
+  default: {
+    user: {
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
+import prisma from '../../src/config/prisma.js';
 
 describe('Authentication Middleware', () => {
   const createMockReq = (cookieValue) => ({
@@ -15,6 +25,7 @@ describe('Authentication Middleware', () => {
     beforeEach(() => {
       vi.clearAllMocks();
       jwt.verify = vi.fn();
+      prisma.user.findUnique.mockClear();
     });
 
     it('allow access if valid token/user', async () => {
@@ -28,7 +39,7 @@ describe('Authentication Middleware', () => {
 
       // Mock jwt.verify and prisma user lookup
       jwt.verify.mockReturnValue({ id: '123' });
-      prisma.user.findUnique = vi.fn().mockResolvedValue(mockUser);
+      prisma.user.findUnique.mockResolvedValue(mockUser);
 
       const req = createMockReq('valid.jwt.token');
       const res = createMockRes();
@@ -70,7 +81,7 @@ describe('Authentication Middleware', () => {
 
     it('calls next with error if user not found', async () => {
       jwt.verify.mockReturnValue({ id: 'not-found' });
-      prisma.user.findUnique = vi.fn().mockResolvedValue(null);
+      prisma.user.findUnique.mockResolvedValue(null);
 
       const req = createMockReq('valid.token.but.user.missing');
       const res = createMockRes();

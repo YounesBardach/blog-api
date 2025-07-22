@@ -197,7 +197,10 @@ const errorHandler = (err, req, res, next) => {
   // --- Fallback for unknown errors ---
   if (!problemDetails) {
     const title = err.name && err.name !== 'Error' ? err.name : 'Unknown Error';
-    const type = `/errors/${(err.name || 'unknown').toLowerCase().replace(/error$/, '')}`;
+    let typeName = (err.name || 'unknown').toLowerCase().replace(/error$/, '');
+    // If removing 'error' leaves empty string, use 'unknown'
+    if (!typeName) typeName = 'unknown';
+    const type = `/errors/${typeName}`;
     problemDetails = createProblemDetails(
       type,
       title,
@@ -231,17 +234,12 @@ const errorHandler = (err, req, res, next) => {
 
   logger.error(originalMessage, {
     statusCode,
-    outcome,
-    responsePayload: payload,
-    stack: err.stack,
-    url: req.originalUrl,
+    type: problemDetails.type,
     method: req.method,
+    url: req.originalUrl,
     ip: req.ip,
-    originalError: {
-      message: err.message,
-      name: err.name,
-      code: err.code,
-    },
+    errorName: err.name,
+    errorCode: err.code,
   });
 
   res.status(statusCode).json(payload);

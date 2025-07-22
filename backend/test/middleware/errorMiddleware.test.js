@@ -1,12 +1,12 @@
-import errorHandler from '../src/middleware/errorMiddleware.js';
-import logger from '../src/config/logger.js';
-
 // Mock the logger module to prevent console output and to track calls
-vi.mock('../src/config/logger.js', () => ({
+vi.mock('../../src/config/logger.js', () => ({
   default: {
     error: vi.fn(),
   },
 }));
+
+import errorHandler from '../../src/middleware/errorMiddleware.js';
+import logger from '../../src/config/logger.js';
 
 describe('Error Middleware', () => {
   let mockRequest;
@@ -15,8 +15,8 @@ describe('Error Middleware', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    // Reset mocks and environment before each test
-    vi.restoreAllMocks();
+    // Clear mock call history but keep mocks intact
+    vi.clearAllMocks();
     process.env = { ...originalEnv };
 
     mockRequest = {

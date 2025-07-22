@@ -3,22 +3,35 @@ import {
   validateLogin,
   validatePostUpdate,
   validateCommentUpdate,
-} from '../src/middleware/validationMiddleware.js';
+} from '../../src/middleware/validationMiddleware.js';
 
 describe('Validation Middleware', () => {
   // Helper function to run middleware chain
   const runMiddlewareChain = async (middlewareArray, req, res, next) => {
     for (const middleware of middlewareArray) {
-      // Stop if next has been called (error)
-      if (next.mock.calls.length > 0) {
+      // Stop if next has been called with an error
+      if (next.mock.calls.length > 0 && next.mock.calls[0][0]) {
         break;
       }
-      await middleware(req, res, next);
+
+      // Wrap in promise to handle both sync and async middleware
+      await new Promise((resolve) => {
+        const mockNext = (error) => {
+          if (error) {
+            next(error);
+          } else {
+            next();
+          }
+          resolve();
+        };
+
+        middleware(req, res, mockNext);
+      });
     }
   };
 
   const createMockReq = (body = {}) => ({
-    body,
+    body: { ...body }, // Create a proper copy to avoid mutation issues
   });
 
   const createMockRes = () => ({});
@@ -67,7 +80,14 @@ describe('Validation Middleware', () => {
       const next = createMockNext();
 
       await runMiddlewareChain(validateRegistration, req, res, next);
-      const error = next.mock.calls[0][0];
+
+      expect(next).toHaveBeenCalled();
+
+      // Find the call with an error (last call should have the error)
+      const errorCall = next.mock.calls.find((call) => call.length > 0 && call[0] instanceof Error);
+      expect(errorCall).toBeDefined();
+
+      const error = errorCall[0];
       expect(error.name).toBe('ValidationError');
       expect(error.errors[0].msg).toBe('Please provide a valid email');
     });
@@ -83,7 +103,11 @@ describe('Validation Middleware', () => {
       const next = createMockNext();
 
       await runMiddlewareChain(validateRegistration, req, res, next);
-      const error = next.mock.calls[0][0];
+
+      const errorCall = next.mock.calls.find((call) => call.length > 0 && call[0] instanceof Error);
+      expect(errorCall).toBeDefined();
+
+      const error = errorCall[0];
       expect(error.name).toBe('ValidationError');
       expect(error.errors[0].msg).toBe('Password must be at least 6 characters long');
     });
@@ -105,7 +129,11 @@ describe('Validation Middleware', () => {
       const next = createMockNext();
 
       await runMiddlewareChain(validateLogin, req, res, next);
-      const error = next.mock.calls[0][0];
+
+      const errorCall = next.mock.calls.find((call) => call.length > 0 && call[0] instanceof Error);
+      expect(errorCall).toBeDefined();
+
+      const error = errorCall[0];
       expect(error.name).toBe('ValidationError');
       expect(error.errors[0].msg).toBe('Username is required');
     });
@@ -136,7 +164,7 @@ describe('Validation Middleware', () => {
       const next = createMockNext();
 
       await runMiddlewareChain(validatePostUpdate, req, res, next);
-      expect(req.body.title).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+      expect(req.body.title).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;&#x2F;script&gt;');
       expect(next).toHaveBeenCalledWith();
     });
 
@@ -146,7 +174,11 @@ describe('Validation Middleware', () => {
       const next = createMockNext();
 
       await runMiddlewareChain(validatePostUpdate, req, res, next);
-      const error = next.mock.calls[0][0];
+
+      const errorCall = next.mock.calls.find((call) => call.length > 0 && call[0] instanceof Error);
+      expect(errorCall).toBeDefined();
+
+      const error = errorCall[0];
       expect(error.name).toBe('ValidationError');
       expect(error.errors[0].msg).toContain('Request body cannot be empty');
     });
@@ -157,7 +189,11 @@ describe('Validation Middleware', () => {
       const next = createMockNext();
 
       await runMiddlewareChain(validatePostUpdate, req, res, next);
-      const error = next.mock.calls[0][0];
+
+      const errorCall = next.mock.calls.find((call) => call.length > 0 && call[0] instanceof Error);
+      expect(errorCall).toBeDefined();
+
+      const error = errorCall[0];
       expect(error.name).toBe('ValidationError');
       expect(error.errors[0].msg).toBe('Title cannot be empty');
     });
@@ -189,7 +225,11 @@ describe('Validation Middleware', () => {
       const next = createMockNext();
 
       await runMiddlewareChain(validateCommentUpdate, req, res, next);
-      const error = next.mock.calls[0][0];
+
+      const errorCall = next.mock.calls.find((call) => call.length > 0 && call[0] instanceof Error);
+      expect(errorCall).toBeDefined();
+
+      const error = errorCall[0];
       expect(error.name).toBe('ValidationError');
       expect(error.errors[0].msg).toBe('Comment content cannot be empty');
     });

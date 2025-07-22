@@ -88,8 +88,8 @@ export const validatePostUpdate = [
     }
     return true;
   }),
-  body('title').optional().notEmpty().withMessage('Title cannot be empty').trim().escape(),
-  body('content').optional().notEmpty().withMessage('Content cannot be empty').trim().escape(),
+  body('title').optional().trim().notEmpty().withMessage('Title cannot be empty').escape(),
+  body('content').optional().trim().notEmpty().withMessage('Content cannot be empty').escape(),
   // Middleware to check for validation errors
   (req, res, next) => {
     const errors = validationResult(req);
@@ -107,7 +107,7 @@ export const validatePostUpdate = [
 
 // Validation middleware for updating a comment
 export const validateCommentUpdate = [
-  body('content').notEmpty().withMessage('Comment content cannot be empty').trim().escape(),
+  body('content').trim().notEmpty().withMessage('Comment content cannot be empty').escape(),
   // Middleware to check for validation errors
   (req, res, next) => {
     const errors = validationResult(req);
