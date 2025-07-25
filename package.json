@@ -1,12 +1,29 @@
 {
   "name": "blog-project",
   "version": "1.0.0",
-  "description": "Blog project with Express backend and React frontends",
+  "description": "Blog project with Express backend and React frontend",
   "private": true,
   "workspaces": [
-    "backend"
+    "backend",
+    "frontend"
   ],
-  "scripts": {},
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspaces",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspace=backend && npm run lint --workspace=frontend --silent",
+    "test": "npm run test --workspace=backend",
+    "test:coverage": "npm run test:coverage --workspace=backend",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "install:all": "npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
   "author": "",
   "license": "ISC"
 }
