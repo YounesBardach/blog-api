@@ -34,7 +34,7 @@
  *                 format: password
  *     responses:
  *       201:
- *         description: User successfully registered. Returns the user object and sets a `connect.sid` session cookie.
+ *         description: User successfully registered. Returns the user object and sets a `jwt` authentication cookie.
  *         content:
  *           application/json:
  *             schema:
@@ -82,7 +82,7 @@
  *                 format: password
  *     responses:
  *       200:
- *         description: User successfully logged in. Returns the user object and sets a `connect.sid` session cookie.
+ *         description: User successfully logged in. Returns the user object and sets a `jwt` authentication cookie.
  *         content:
  *           application/json:
  *             schema:

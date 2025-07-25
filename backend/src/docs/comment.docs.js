@@ -24,9 +24,21 @@
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Comment'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Comment'
  *       404:
  *         description: Post not found
  *         content:
@@ -65,7 +77,19 @@
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Comment'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     comment:
+ *                       $ref: '#/components/schemas/Comment'
  *       401:
  *         description: Not authenticated (i.e., not logged in)
  *         content:
@@ -117,7 +141,19 @@
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Comment'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     comment:
+ *                       $ref: '#/components/schemas/Comment'
  *       400:
  *         description: Invalid input
  *         content:

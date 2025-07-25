@@ -25,8 +25,7 @@ beforeAll(async () => {
         DATABASE_URL: process.env.DATABASE_URL,
       },
     });
-  } catch (error) {
-    console.error('Failed to reset database:', error.message);
+  } catch {
     process.exit(1);
   }
 

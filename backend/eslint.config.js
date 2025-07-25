@@ -8,9 +8,10 @@ export default [
       'node_modules/**',
       'dist/**',
       'coverage/**',
+      'src/generated/**',
       '.git/**',
-      '*.config.js'
-    ]
+      '*.config.js',
+    ],
   },
   {
     files: ['**/*.js'],
@@ -19,16 +20,16 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.node,
-        process: 'readonly'
-      }
+        process: 'readonly',
+      },
     },
     plugins: {
-      prettier
+      prettier,
     },
     rules: {
       'prettier/prettier': 'warn',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_|^next$' }],
-      'no-console': 'warn'
-    }
-  }
-]; 
+      'no-console': 'warn',
+    },
+  },
+];

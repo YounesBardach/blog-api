@@ -15,9 +15,7 @@
     "format": "prettier --write .",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:studio": "prisma studio",
-    "prisma:migrate:test": "NODE_ENV=test prisma migrate deploy"
+    "prisma:studio": "prisma studio"
   },
   "repository": {
     "type": "git",

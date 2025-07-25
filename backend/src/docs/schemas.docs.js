@@ -19,12 +19,16 @@
  *           description: The user's username
  *         role:
  *           type: string
- *           enum: [USER, ADMIN]
+ *           enum: [READER, ADMIN]
  *           description: The user's role
  *         createdAt:
  *           type: string
  *           format: date-time
  *           description: The date the user was created
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: The date the user was last updated
  *
  *     Post:
  *       type: object
@@ -75,7 +79,7 @@
  *         postId:
  *           type: string
  *           description: The ID of the post this comment belongs to
- *         userId:
+ *         authorId:
  *           type: string
  *           description: The ID of the user who created the comment
  *         createdAt:

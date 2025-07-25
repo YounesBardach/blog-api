@@ -18,7 +18,6 @@ async function main() {
   });
 
   if (existingAdmin) {
-    console.log('Admin user already exists');
     return;
   }
 
@@ -34,17 +33,10 @@ async function main() {
       role: adminData.role,
     },
   });
-
-  console.log('Admin user created successfully!');
-  console.log('Credentials:');
-  console.log('Username:', adminData.username);
-  console.log('Password:', adminData.password);
-  console.log('Email:', adminData.email);
 }
 
 main()
-  .catch((e) => {
-    console.error('Error seeding data:', e);
+  .catch((_e) => {
     process.exit(1);
   })
   .finally(() => {
