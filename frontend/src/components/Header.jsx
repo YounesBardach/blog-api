@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import { usePermissions } from "../hooks/usePermissions";
+import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { usePermissions } from '../hooks/usePermissions';
 
 const Header = () => {
   const { isAuthenticated, logout } = useAuth();

@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import api from "../config/axios";
-import { usePermissions } from "../hooks/usePermissions";
-import { useAuth } from "../hooks/useAuth";
-import { showSuccessToast, showErrorToast } from "../utils/errorHelpers";
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import api from '../config/axios';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
+import { showSuccessToast, showErrorToast } from '../utils/errorHelpers';
 
 const Comment = ({ comment, postId }) => {
   const { canManageComment } = usePermissions();
@@ -25,11 +25,10 @@ const Comment = ({ comment, postId }) => {
   });
 
   const editCommentMutation = useMutation({
-    mutationFn: ({ commentId, content }) =>
-      api.put(`/comments/${commentId}`, { content }),
+    mutationFn: ({ commentId, content }) => api.put(`/comments/${commentId}`, { content }),
     onSuccess: () => {
-      showSuccessToast("Comment updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      showSuccessToast('Comment updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       setIsEditing(false);
     },
     onError: (error) => {
@@ -40,8 +39,8 @@ const Comment = ({ comment, postId }) => {
   const deleteCommentMutation = useMutation({
     mutationFn: (commentId) => api.delete(`/comments/${commentId}`),
     onSuccess: () => {
-      showSuccessToast("Comment deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      showSuccessToast('Comment deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       setShowDeleteConfirm(false);
     },
     onError: (error) => {
@@ -77,9 +76,7 @@ const Comment = ({ comment, postId }) => {
         </div>
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium text-gray-900">
-              {comment.author.name}
-            </p>
+            <p className="text-sm font-medium text-gray-900">{comment.author.name}</p>
             <p className="text-xs text-gray-500">
               {new Date(comment.createdAt).toLocaleDateString()}
             </p>
@@ -88,19 +85,16 @@ const Comment = ({ comment, postId }) => {
           {isEditing ? (
             <form onSubmit={handleSubmit(handleEdit)} className="mt-2">
               <textarea
-                {...register("content", {
-                  required: "Content is required",
-                  validate: (value) =>
-                    value.trim() !== "" || "Comment content cannot be empty",
+                {...register('content', {
+                  required: 'Content is required',
+                  validate: (value) => value.trim() !== '' || 'Comment content cannot be empty',
                 })}
                 rows={3}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Edit your comment..."
               />
               {errors.content && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.content.message}
-                </p>
+                <p className="mt-1 text-sm text-red-600">{errors.content.message}</p>
               )}
               <div className="flex space-x-2 mt-2">
                 <button
@@ -108,7 +102,7 @@ const Comment = ({ comment, postId }) => {
                   disabled={editCommentMutation.isPending}
                   className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  {editCommentMutation.isPending ? "Saving..." : "Save"}
+                  {editCommentMutation.isPending ? 'Saving...' : 'Save'}
                 </button>
                 <button
                   type="button"
@@ -148,13 +142,10 @@ const Comment = ({ comment, postId }) => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3 text-center">
-              <h3 className="text-lg font-medium text-gray-900">
-                Delete Comment
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900">Delete Comment</h3>
               <div className="mt-2 px-7 py-3">
                 <p className="text-sm text-gray-500">
-                  Are you sure you want to delete this comment? This action
-                  cannot be undone.
+                  Are you sure you want to delete this comment? This action cannot be undone.
                 </p>
               </div>
               <div className="flex items-center justify-center space-x-4">
@@ -169,7 +160,7 @@ const Comment = ({ comment, postId }) => {
                   disabled={deleteCommentMutation.isPending}
                   className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
                 >
-                  {deleteCommentMutation.isPending ? "Deleting..." : "Delete"}
+                  {deleteCommentMutation.isPending ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>

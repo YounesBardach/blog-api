@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import api from "../config/axios";
-import { AuthContext } from "./authContext";
-import { showSuccessToast, showErrorToast } from "../utils/errorHelpers";
+import React, { useState } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import api from '../config/axios';
+import { AuthContext } from './authContext';
+import { showSuccessToast, showErrorToast } from '../utils/errorHelpers';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -10,9 +10,9 @@ export const AuthProvider = ({ children }) => {
 
   // Main query to determine if user is authenticated
   const { isLoading } = useQuery({
-    queryKey: ["profile"],
+    queryKey: ['profile'],
     queryFn: async () => {
-      const res = await api.get("/users/profile");
+      const res = await api.get('/users/profile');
       const user = res.data.data.user;
       setUser(user);
       return user;
@@ -23,12 +23,12 @@ export const AuthProvider = ({ children }) => {
 
   // Logout mutation
   const logoutMutation = useMutation({
-    mutationFn: () => api.post("/users/logout"),
+    mutationFn: () => api.post('/users/logout'),
     onSuccess: () => {
-      showSuccessToast("Logged out successfully. See you next time!");
+      showSuccessToast('Logged out successfully. See you next time!');
       // Remove cached user on successful logout
       setUser(null);
-      queryClient.removeQueries({ queryKey: ["profile"] });
+      queryClient.removeQueries({ queryKey: ['profile'] });
     },
     onError: (error) => {
       showErrorToast(error);
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   const login = () => {
     // Instead of setting incomplete user data, invalidate the profile query
     // to refetch complete user data including createdAt
-    queryClient.invalidateQueries({ queryKey: ["profile"] });
+    queryClient.invalidateQueries({ queryKey: ['profile'] });
   };
 
   const logout = () => {

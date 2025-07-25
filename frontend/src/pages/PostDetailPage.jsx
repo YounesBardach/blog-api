@@ -1,11 +1,11 @@
-import { useParams, Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import api from "../config/axios";
-import { usePermissions } from "../hooks/usePermissions";
-import { useAuth } from "../hooks/useAuth";
-import Comment from "../components/Comment";
-import { showSuccessToast, showErrorToast } from "../utils/errorHelpers";
+import { useParams, Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import api from '../config/axios';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
+import Comment from '../components/Comment';
+import { showSuccessToast, showErrorToast } from '../utils/errorHelpers';
 
 const PostDetailPage = () => {
   const { id } = useParams();
@@ -20,7 +20,7 @@ const PostDetailPage = () => {
     reset,
   } = useForm({
     defaultValues: {
-      content: "",
+      content: '',
     },
   });
 
@@ -29,7 +29,7 @@ const PostDetailPage = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["post", id],
+    queryKey: ['post', id],
     queryFn: async () => {
       const response = await api.get(`/posts/${id}`);
       return response.data.data.post;
@@ -37,7 +37,7 @@ const PostDetailPage = () => {
   });
 
   const { data: comments, isLoading: commentsLoading } = useQuery({
-    queryKey: ["comments", id],
+    queryKey: ['comments', id],
     queryFn: async () => {
       const response = await api.get(`/comments/post/${id}`);
       return response.data.data.comments;
@@ -47,8 +47,8 @@ const PostDetailPage = () => {
   const addCommentMutation = useMutation({
     mutationFn: (data) => api.post(`/comments/post/${id}`, data),
     onSuccess: () => {
-      showSuccessToast("Comment added successfully!");
-      queryClient.invalidateQueries({ queryKey: ["comments", id] });
+      showSuccessToast('Comment added successfully!');
+      queryClient.invalidateQueries({ queryKey: ['comments', id] });
       reset();
     },
     onError: (error) => {
@@ -110,9 +110,7 @@ const PostDetailPage = () => {
                 </span>
               </div>
               <div>
-                <p className="text-lg font-medium text-gray-900">
-                  {post.author.name}
-                </p>
+                <p className="text-lg font-medium text-gray-900">{post.author.name}</p>
                 <p className="text-sm text-gray-500">
                   {new Date(post.createdAt).toLocaleDateString()}
                 </p>
@@ -132,9 +130,7 @@ const PostDetailPage = () => {
             )}
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            {post.title}
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
           <div className="prose max-w-none">
             <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">
               {post.content}
@@ -153,30 +149,23 @@ const PostDetailPage = () => {
           {/* Add comment form - only for authenticated users */}
           {isAuthenticated && (
             <div className="mb-8">
-              <form
-                onSubmit={handleSubmit(handleAddComment)}
-                className="space-y-4"
-              >
+              <form onSubmit={handleSubmit(handleAddComment)} className="space-y-4">
                 <div>
                   <label htmlFor="content" className="sr-only">
                     Add a comment
                   </label>
                   <textarea
                     id="content"
-                    {...register("content", {
-                      required: "Comment is required",
-                      validate: (value) =>
-                        value.trim() !== "" ||
-                        "Comment content cannot be empty",
+                    {...register('content', {
+                      required: 'Comment is required',
+                      validate: (value) => value.trim() !== '' || 'Comment content cannot be empty',
                     })}
                     rows={4}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="Add a comment..."
                   />
                   {errors.content && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.content.message}
-                    </p>
+                    <p className="mt-1 text-sm text-red-600">{errors.content.message}</p>
                   )}
                 </div>
                 <div className="flex justify-end">
@@ -185,7 +174,7 @@ const PostDetailPage = () => {
                     disabled={addCommentMutation.isPending}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
-                    {addCommentMutation.isPending ? "Adding..." : "Add Comment"}
+                    {addCommentMutation.isPending ? 'Adding...' : 'Add Comment'}
                   </button>
                 </div>
               </form>
@@ -206,10 +195,8 @@ const PostDetailPage = () => {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500">
-                No comments yet.{" "}
-                {isAuthenticated
-                  ? "Be the first to comment!"
-                  : "Login to add a comment."}
+                No comments yet.{' '}
+                {isAuthenticated ? 'Be the first to comment!' : 'Login to add a comment.'}
               </p>
             </div>
           )}

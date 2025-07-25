@@ -1,14 +1,14 @@
-import { Outlet } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Toaster } from "react-hot-toast";
-import Header from "./components/Header";
-import api from "./config/axios";
+import { Outlet } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Toaster } from 'react-hot-toast';
+import Header from './components/Header';
+import api from './config/axios';
 
 function App() {
   // Use React Query to fetch CSRF token
   useQuery({
-    queryKey: ["csrf"],
-    queryFn: () => api.get("/", { baseURL: "http://localhost:5000" }),
+    queryKey: ['csrf'],
+    queryFn: () => api.get('/', { baseURL: 'http://localhost:5000' }),
     staleTime: Infinity, // CSRF token doesn't expire
     cacheTime: Infinity, // Keep it in cache forever
     retry: false, // Don't retry on errors
@@ -25,21 +25,21 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: "#363636",
-            color: "#fff",
+            background: '#363636',
+            color: '#fff',
           },
           success: {
             duration: 3000,
             iconTheme: {
-              primary: "#4ade80",
-              secondary: "#fff",
+              primary: '#4ade80',
+              secondary: '#fff',
             },
           },
           error: {
             duration: 5000,
             iconTheme: {
-              primary: "#ef4444",
-              secondary: "#fff",
+              primary: '#ef4444',
+              secondary: '#fff',
             },
           },
         }}

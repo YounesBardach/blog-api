@@ -1,4 +1,4 @@
-import toast from "react-hot-toast";
+import toast from 'react-hot-toast';
 
 /**
  * Extract user-friendly error message from backend error response
@@ -29,7 +29,7 @@ export const getErrorMessage = (error) => {
     return error.message;
   }
 
-  return "An unexpected error occurred";
+  return 'An unexpected error occurred';
 };
 
 // Toast notification functions

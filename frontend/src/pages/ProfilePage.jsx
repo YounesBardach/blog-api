@@ -1,4 +1,4 @@
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from '../hooks/useAuth';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -24,9 +24,7 @@ const ProfilePage = () => {
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {user.name}
-                  </h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{user.name}</h2>
                   <p className="text-gray-600">{user.email}</p>
                 </div>
               </div>
@@ -34,21 +32,15 @@ const ProfilePage = () => {
               <div className="border-t border-gray-200 pt-6">
                 <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">
-                      Username
-                    </dt>
-                    <dd className="mt-1 text-lg text-gray-900">
-                      {user.username}
-                    </dd>
+                    <dt className="text-sm font-medium text-gray-500">Username</dt>
+                    <dd className="mt-1 text-lg text-gray-900">{user.username}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">
-                      Member Since
-                    </dt>
+                    <dt className="text-sm font-medium text-gray-500">Member Since</dt>
                     <dd className="mt-1 text-lg text-gray-900">
                       {user.createdAt
                         ? new Date(user.createdAt).toLocaleDateString()
-                        : "Not available"}
+                        : 'Not available'}
                     </dd>
                   </div>
                 </dl>

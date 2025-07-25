@@ -1,11 +1,11 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { useEffect } from "react";
-import api from "../config/axios";
-import { usePermissions } from "../hooks/usePermissions";
-import { useAuth } from "../hooks/useAuth";
-import { showSuccessToast, showErrorToast } from "../utils/errorHelpers";
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import api from '../config/axios';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
+import { showSuccessToast, showErrorToast } from '../utils/errorHelpers';
 
 const PostEditPage = () => {
   const { id } = useParams();
@@ -21,8 +21,8 @@ const PostEditPage = () => {
     reset,
   } = useForm({
     defaultValues: {
-      title: "",
-      content: "",
+      title: '',
+      content: '',
     },
   });
 
@@ -32,7 +32,7 @@ const PostEditPage = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["post", id],
+    queryKey: ['post', id],
     queryFn: async () => {
       const response = await api.get(`/posts/${id}`);
       return response.data.data.post;
@@ -44,8 +44,8 @@ const PostEditPage = () => {
   useEffect(() => {
     if (post) {
       reset({
-        title: post.title || "",
-        content: post.content || "",
+        title: post.title || '',
+        content: post.content || '',
       });
     }
   }, [post, reset]);
@@ -53,10 +53,10 @@ const PostEditPage = () => {
   const updatePostMutation = useMutation({
     mutationFn: (data) => api.put(`/posts/${id}`, data),
     onSuccess: () => {
-      showSuccessToast("Post updated successfully!");
+      showSuccessToast('Post updated successfully!');
       // Invalidate and refetch post data
-      queryClient.invalidateQueries({ queryKey: ["post", id] });
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ['post', id] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       navigate(`/posts/${id}`);
     },
     onError: (error) => {
@@ -136,10 +136,7 @@ const PostEditPage = () => {
 
           <form onSubmit={handleSubmit(handleUpdatePost)} className="space-y-6">
             <div>
-              <label
-                htmlFor="title"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                 Title
               </label>
               <div className="mt-1">
@@ -147,27 +144,21 @@ const PostEditPage = () => {
                   type="text"
                   id="title"
                   className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    errors.title ? "border-red-300" : "border-gray-300"
+                    errors.title ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  {...register("title", {
-                    required: "Title is required",
-                    validate: (value) =>
-                      value.trim() !== "" || "Title cannot be empty",
+                  {...register('title', {
+                    required: 'Title is required',
+                    validate: (value) => value.trim() !== '' || 'Title cannot be empty',
                   })}
                 />
                 {errors.title && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {errors.title.message}
-                  </p>
+                  <p className="mt-2 text-sm text-red-600">{errors.title.message}</p>
                 )}
               </div>
             </div>
 
             <div>
-              <label
-                htmlFor="content"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700">
                 Content
               </label>
               <div className="mt-1">
@@ -175,18 +166,15 @@ const PostEditPage = () => {
                   id="content"
                   rows={12}
                   className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    errors.content ? "border-red-300" : "border-gray-300"
+                    errors.content ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  {...register("content", {
-                    required: "Content is required",
-                    validate: (value) =>
-                      value.trim() !== "" || "Content cannot be empty",
+                  {...register('content', {
+                    required: 'Content is required',
+                    validate: (value) => value.trim() !== '' || 'Content cannot be empty',
                   })}
                 />
                 {errors.content && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {errors.content.message}
-                  </p>
+                  <p className="mt-2 text-sm text-red-600">{errors.content.message}</p>
                 )}
               </div>
             </div>
@@ -204,7 +192,7 @@ const PostEditPage = () => {
                 disabled={updatePostMutation.isPending}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                {updatePostMutation.isPending ? "Updating..." : "Update Post"}
+                {updatePostMutation.isPending ? 'Updating...' : 'Update Post'}
               </button>
             </div>
           </form>

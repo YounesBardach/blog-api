@@ -1,10 +1,10 @@
-import { Link } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import api from "../config/axios";
-import { usePermissions } from "../hooks/usePermissions";
-import { useAuth } from "../hooks/useAuth";
-import { showSuccessToast, showErrorToast } from "../utils/errorHelpers";
+import { Link } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import api from '../config/axios';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
+import { showSuccessToast, showErrorToast } from '../utils/errorHelpers';
 
 const PostCard = ({ post }) => {
   const { isAdmin } = usePermissions();
@@ -15,8 +15,8 @@ const PostCard = ({ post }) => {
   const deletePostMutation = useMutation({
     mutationFn: (postId) => api.delete(`/posts/${postId}`),
     onSuccess: () => {
-      showSuccessToast("Post deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      showSuccessToast('Post deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       setShowDeleteConfirm(false);
     },
     onError: (error) => {
@@ -30,19 +30,12 @@ const PostCard = ({ post }) => {
 
   return (
     <article className="flex flex-col rounded-lg shadow-lg overflow-hidden bg-white hover:bg-gray-100 hover:border-blue-300 border border-transparent transition-all duration-200">
-      <Link
-        to={`/posts/${post.id}`}
-        className="flex-1 transition-colors duration-200 no-underline"
-      >
+      <Link to={`/posts/${post.id}`} className="flex-1 transition-colors duration-200 no-underline">
         <div className="p-6 flex flex-col justify-between h-full">
           <div className="flex-1">
             <div className="mt-2">
-              <p className="text-xl font-semibold text-gray-900">
-                {post.title}
-              </p>
-              <p className="mt-3 text-base text-gray-500">
-                {post.content.substring(0, 150)}...
-              </p>
+              <p className="text-xl font-semibold text-gray-900">{post.title}</p>
+              <p className="mt-3 text-base text-gray-500">{post.content.substring(0, 150)}...</p>
             </div>
           </div>
 
@@ -58,9 +51,7 @@ const PostCard = ({ post }) => {
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">
-                  {post.author.name}
-                </p>
+                <p className="text-sm font-medium text-gray-900">{post.author.name}</p>
                 <div className="flex space-x-1 text-sm text-gray-500">
                   <time dateTime={post.createdAt}>
                     {new Date(post.createdAt).toLocaleDateString()}
@@ -105,8 +96,7 @@ const PostCard = ({ post }) => {
               <h3 className="text-lg font-medium text-gray-900">Delete Post</h3>
               <div className="mt-2 px-7 py-3">
                 <p className="text-sm text-gray-500">
-                  Are you sure you want to delete this post? This action cannot
-                  be undone.
+                  Are you sure you want to delete this post? This action cannot be undone.
                 </p>
               </div>
               <div className="flex items-center justify-center space-x-4">
@@ -121,7 +111,7 @@ const PostCard = ({ post }) => {
                   disabled={deletePostMutation.isPending}
                   className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
                 >
-                  {deletePostMutation.isPending ? "Deleting..." : "Delete"}
+                  {deletePostMutation.isPending ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>

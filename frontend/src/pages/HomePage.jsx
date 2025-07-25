@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-import api from "../config/axios";
-import PostCard from "../components/PostCard";
-import { showErrorToast } from "../utils/errorHelpers";
+import { useQuery } from '@tanstack/react-query';
+import api from '../config/axios';
+import PostCard from '../components/PostCard';
+import { showErrorToast } from '../utils/errorHelpers';
 
 const HomePage = () => {
   const {
@@ -9,9 +9,9 @@ const HomePage = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["posts"],
+    queryKey: ['posts'],
     queryFn: async () => {
-      const response = await api.get("/posts");
+      const response = await api.get('/posts');
       return response.data.data.posts;
     },
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
@@ -46,9 +46,7 @@ const HomePage = () => {
           <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
             Blog API
           </h2>
-          <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            List of posts:
-          </p>
+          <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">List of posts:</p>
         </div>
 
         <div className="mt-12 max-w-lg mx-auto grid gap-8 lg:grid-cols-3 lg:max-w-none">
@@ -56,12 +54,8 @@ const HomePage = () => {
             postsData.map((post) => <PostCard key={post.id} post={post} />)
           ) : (
             <div className="col-span-full text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900">
-                No posts yet
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Check back later for new articles.
-              </p>
+              <h3 className="text-lg font-medium text-gray-900">No posts yet</h3>
+              <p className="mt-1 text-sm text-gray-500">Check back later for new articles.</p>
             </div>
           )}
         </div>
