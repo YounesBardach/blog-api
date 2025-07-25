@@ -4,3 +4,4 @@ node_modules
 .env.test
 # Generated code
 src/generated/
+coverage/
