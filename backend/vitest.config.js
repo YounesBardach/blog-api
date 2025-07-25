@@ -27,10 +27,13 @@ export default defineConfig({
         '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
         '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
         '**/__tests__/**',
-        '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+        '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint}.config.*',
         '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
         'src/docs/**',
         'src/scripts/**',
+        'src/generated/**',
+        'prisma/seed.js',
+        'src/server.js',
       ],
       thresholds: {
         global: {

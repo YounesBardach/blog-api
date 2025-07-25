@@ -1,7 +1,7 @@
-import * as commentService from '../src/services/commentService.js';
+import * as commentService from '../../src/services/commentService.js';
 
 // --- Mock Prisma ---
-vi.mock('../src/config/prisma.js', () => ({
+vi.mock('../../src/config/prisma.js', () => ({
   default: {
     post: {
       findUnique: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock('../src/config/prisma.js', () => ({
   },
 }));
 
-const prisma = (await import('../src/config/prisma.js')).default;
+const prisma = (await import('../../src/config/prisma.js')).default;
 
 const samplePostId = 'post-1';
 const sampleCommentId = 'comment-1';

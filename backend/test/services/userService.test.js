@@ -1,8 +1,8 @@
-import * as userService from '../src/services/userService.js';
+import * as userService from '../../src/services/userService.js';
 import bcrypt from 'bcryptjs';
 
 // --- Mock Prisma ---
-vi.mock('../src/config/prisma.js', () => ({
+vi.mock('../../src/config/prisma.js', () => ({
   default: {
     user: {
       findFirst: vi.fn(),
@@ -13,12 +13,13 @@ vi.mock('../src/config/prisma.js', () => ({
 }));
 
 // --- Mock JWT ---
-// Any jwt function will return mock-token
 vi.mock('jsonwebtoken', () => ({
-  sign: vi.fn(() => 'mock-token'),
+  default: {
+    sign: vi.fn(() => 'mock-token'),
+  },
 }));
-// When need to reimport for the mock to work because prisma executes before the mock in userService.js and creates a real prisma instance
-const prisma = (await import('../src/config/prisma.js')).default;
+
+const prisma = (await import('../../src/config/prisma.js')).default;
 
 let sampleUser;
 

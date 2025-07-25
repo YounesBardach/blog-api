@@ -1,7 +1,7 @@
-import * as postService from '../src/services/postService.js';
+import * as postService from '../../src/services/postService.js';
 
 // --- Mock Prisma ---
-vi.mock('../src/config/prisma.js', () => ({
+vi.mock('../../src/config/prisma.js', () => ({
   default: {
     post: {
       findMany: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock('../src/config/prisma.js', () => ({
   },
 }));
 
-const prisma = (await import('../src/config/prisma.js')).default;
+const prisma = (await import('../../src/config/prisma.js')).default;
 
 const samplePost = {
   id: 'post-1',

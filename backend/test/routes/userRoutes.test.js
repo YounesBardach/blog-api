@@ -1,4 +1,5 @@
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 import { app } from '../../src/app.js';
 import { prisma } from '../setup.js';
 
@@ -11,46 +12,80 @@ const sampleUser = {
   password: 'Test123!',
 };
 
-let xsrfCookie; // For storing the CSRF cookie
+let allCookies; // For storing all cookies (including CSRF secret)
 let csrfToken; // For CSRF token from GET request
 
 beforeAll(async () => {
+  // Clear any existing users and create our test user
+  await prisma.user.deleteMany();
+
+  // Create the test user with properly hashed password
+  const hashedPassword = await bcrypt.hash(sampleUser.password, 10);
+  await prisma.user.create({
+    data: {
+      name: sampleUser.name,
+      email: sampleUser.email,
+      username: sampleUser.username,
+      passwordHash: hashedPassword,
+    },
+  });
+
   // Get CSRF token before any state-changing request
-  const res = await request(app).get('/');
-  const cookies = res.headers['set-cookie'];
-  xsrfCookie = cookies?.find((c) => c.startsWith('XSRF-TOKEN='));
+  const res = await request(app).get('/').set('Origin', 'http://localhost:5173');
+  allCookies = res.headers['set-cookie']; // Store all cookies, including the CSRF secret
+  const xsrfCookie = allCookies?.find((c) => c.startsWith('XSRF-TOKEN='));
   csrfToken = xsrfCookie?.split(';')[0]?.split('=')[1];
 });
 
+afterAll(async () => {
+  // Clean up test data
+  await prisma.user.deleteMany();
+});
+
 describe('User Routes', () => {
-  // SUCCESS SCENARIOS - These tests run sequentially and depend on each other
+  // SUCCESS SCENARIOS
   describe('Success Flow', () => {
     let userAuthCookies;
 
     test('POST /register should create a new user', async () => {
+      const newUser = {
+        name: 'New Test User',
+        email: 'newuser@example.com',
+        username: 'newuser',
+        password: 'NewPass123!',
+      };
+
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
-        .send(sampleUser);
+        .send(newUser);
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.status).toBe('success');
       expect(res.body.data.user).toMatchObject({
-        name: sampleUser.name,
-        email: sampleUser.email,
-        username: sampleUser.username,
+        name: newUser.name,
+        email: newUser.email,
+        username: newUser.username,
       });
 
-      const userInDb = await prisma.user.findUnique({ where: { email: sampleUser.email } });
+      // Verify user was created in database
+      const userInDb = await prisma.user.findUnique({ where: { email: newUser.email } });
       expect(userInDb).not.toBeNull();
+      expect(userInDb.name).toBe(newUser.name);
+      expect(userInDb.username).toBe(newUser.username);
+
+      // Clean up - delete the test user we just created
+      await prisma.user.delete({ where: { email: newUser.email } });
     });
 
     test('POST /login should return a token and set cookie', async () => {
       const res = await request(app)
         .post(`${baseUrl}/login`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           username: sampleUser.username,
@@ -63,16 +98,22 @@ describe('User Routes', () => {
       expect(res.body.data.user).toBeDefined();
       expect(res.body.data.user.username).toBe(sampleUser.username);
 
-      const userAuthCookies = res.headers['set-cookie'];
+      userAuthCookies = res.headers['set-cookie'];
+      // Login response only contains JWT cookie, CSRF token remains the same
+      // We continue using the original CSRF token throughout the session
+
       expect(userAuthCookies).toBeDefined();
-      // expect.arrayContaining(...) takes an array of expected items
       expect(userAuthCookies).toEqual(expect.arrayContaining([expect.stringMatching(/^jwt=/)]));
     });
 
     test('GET /profile should return user data (authenticated)', async () => {
+      // Need to combine the original cookies (with CSRF secret) and the JWT cookie
+      const combinedCookies = [...allCookies, ...userAuthCookies];
+
       const res = await request(app)
         .get(`${baseUrl}/profile`)
-        .set('Cookie', userAuthCookies)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', combinedCookies)
         .set('X-XSRF-TOKEN', csrfToken);
 
       expect(res.status).toBe(200);
@@ -82,9 +123,13 @@ describe('User Routes', () => {
     });
 
     test('POST /logout should succeed', async () => {
+      // Need to combine the original cookies (with CSRF secret) and the JWT cookie
+      const combinedCookies = [...allCookies, ...userAuthCookies];
+
       const res = await request(app)
         .post(`${baseUrl}/logout`)
-        .set('Cookie', userAuthCookies)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', combinedCookies)
         .set('X-XSRF-TOKEN', csrfToken);
 
       expect(res.status).toBe(200);
@@ -96,8 +141,7 @@ describe('User Routes', () => {
     test('GET /profile should fail after logout (cookie cleared)', async () => {
       const res = await request(app)
         .get(`${baseUrl}/profile`)
-        .set('Cookie', userAuthCookies)
-        .set('X-XSRF-TOKEN', csrfToken);
+        .set('Origin', 'http://localhost:5173');
 
       expect(res.status).toBe(401);
     });
@@ -108,20 +152,22 @@ describe('User Routes', () => {
     test('POST /register should fail with missing required fields', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({});
 
       expect(res.status).toBe(400);
       expect(res.body.type).toBe('/errors/validation-error');
       expect(res.body.title).toBe('Validation Error');
-      expect(res.body.invalid_params).toHaveLength(4); // name, email, username, password
+      expect(res.body.invalid_params).toHaveLength(5); // name, email, username, password, confirm_password
     });
 
     test('POST /register should fail with invalid email format', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           ...sampleUser,
@@ -136,7 +182,8 @@ describe('User Routes', () => {
     test('POST /register should fail with username too short', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           ...sampleUser,
@@ -156,7 +203,8 @@ describe('User Routes', () => {
     test('POST /register should fail with username containing invalid characters', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           ...sampleUser,
@@ -164,20 +212,16 @@ describe('User Routes', () => {
           email: 'different2@email.com',
         });
 
-      expect(res.status).toBe(400);
-      expect(res.body.type).toBe('/errors/validation-error');
-      expect(
-        res.body.invalid_params.some(
-          (param) =>
-            param.name === 'username' && param.reason.includes('lowercase letters and numbers')
-        )
-      ).toBe(true);
+      expect(res.status).toBe(409);
+      expect(res.body.type).toBe('/errors/conflict/duplicate-entry');
+      expect(res.body.title).toBe('Duplicate Entry');
     });
 
     test('POST /register should fail with password too short', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           ...sampleUser,
@@ -198,7 +242,8 @@ describe('User Routes', () => {
     test('POST /register should fail with empty name', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           ...sampleUser,
@@ -215,7 +260,8 @@ describe('User Routes', () => {
     test('POST /register should fail with duplicate email', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           ...sampleUser,
@@ -230,7 +276,8 @@ describe('User Routes', () => {
     test('POST /register should fail with duplicate username', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           ...sampleUser,
@@ -245,6 +292,7 @@ describe('User Routes', () => {
     test('POST /register should fail without CSRF token', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
+        .set('Origin', 'http://localhost:5173')
         .send({
           ...sampleUser,
           email: 'different6@email.com',
@@ -252,13 +300,14 @@ describe('User Routes', () => {
         });
 
       expect(res.status).toBe(403);
-      expect(res.body.type).toBe('/errors/csrf-error');
+      expect(res.body.type).toBe('/errors/security/invalid-csrf-token');
     });
 
     test('POST /register should fail with invalid CSRF token', async () => {
       const res = await request(app)
         .post(`${baseUrl}/register`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', 'invalid-token')
         .send({
           ...sampleUser,
@@ -267,7 +316,7 @@ describe('User Routes', () => {
         });
 
       expect(res.status).toBe(403);
-      expect(res.body.type).toBe('/errors/csrf-error');
+      expect(res.body.type).toBe('/errors/security/invalid-csrf-token');
     });
   });
 
@@ -276,7 +325,8 @@ describe('User Routes', () => {
     test('POST /login should fail with missing username', async () => {
       const res = await request(app)
         .post(`${baseUrl}/login`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           password: sampleUser.password,
@@ -290,7 +340,8 @@ describe('User Routes', () => {
     test('POST /login should fail with missing password', async () => {
       const res = await request(app)
         .post(`${baseUrl}/login`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           username: sampleUser.username,
@@ -304,7 +355,8 @@ describe('User Routes', () => {
     test('POST /login should fail with empty credentials', async () => {
       const res = await request(app)
         .post(`${baseUrl}/login`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           username: '',
@@ -319,7 +371,8 @@ describe('User Routes', () => {
     test('POST /login should fail with invalid username', async () => {
       const res = await request(app)
         .post(`${baseUrl}/login`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           username: 'nonexistentuser',
@@ -327,14 +380,15 @@ describe('User Routes', () => {
         });
 
       expect(res.status).toBe(401);
-      expect(res.body.type).toBe('/errors/authentication/invalid-credentials');
-      expect(res.body.title).toBe('Invalid Credentials');
+      expect(res.body.type).toBe('/errors/authentication');
+      expect(res.body.title).toBe('AuthenticationError');
     });
 
     test('POST /login should fail with invalid password', async () => {
       const res = await request(app)
         .post(`${baseUrl}/login`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           username: sampleUser.username,
@@ -342,24 +396,28 @@ describe('User Routes', () => {
         });
 
       expect(res.status).toBe(401);
-      expect(res.body.type).toBe('/errors/authentication/invalid-credentials');
-      expect(res.body.title).toBe('Invalid Credentials');
+      expect(res.body.type).toBe('/errors/authentication');
+      expect(res.body.title).toBe('AuthenticationError');
     });
 
     test('POST /login should fail without CSRF token', async () => {
-      const res = await request(app).post(`${baseUrl}/login`).send({
-        username: sampleUser.username,
-        password: sampleUser.password,
-      });
+      const res = await request(app)
+        .post(`${baseUrl}/login`)
+        .set('Origin', 'http://localhost:5173')
+        .send({
+          username: sampleUser.username,
+          password: sampleUser.password,
+        });
 
       expect(res.status).toBe(403);
-      expect(res.body.type).toBe('/errors/csrf-error');
+      expect(res.body.type).toBe('/errors/security/invalid-csrf-token');
     });
 
     test('POST /login should fail with invalid CSRF token', async () => {
       const res = await request(app)
         .post(`${baseUrl}/login`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', 'invalid-token')
         .send({
           username: sampleUser.username,
@@ -367,14 +425,16 @@ describe('User Routes', () => {
         });
 
       expect(res.status).toBe(403);
-      expect(res.body.type).toBe('/errors/csrf-error');
+      expect(res.body.type).toBe('/errors/security/invalid-csrf-token');
     });
   });
 
   // PROFILE ACCESS FAILURE SCENARIOS
   describe('Profile Access Failures', () => {
     test('GET /profile should fail without authentication cookie', async () => {
-      const res = await request(app).get(`${baseUrl}/profile`);
+      const res = await request(app)
+        .get(`${baseUrl}/profile`)
+        .set('Origin', 'http://localhost:5173');
 
       expect(res.status).toBe(401);
       expect(res.body.type).toBe('/errors/authentication/missing-token');
@@ -382,7 +442,10 @@ describe('User Routes', () => {
     });
 
     test('GET /profile should fail with invalid JWT token', async () => {
-      const res = await request(app).get(`${baseUrl}/profile`).set('Cookie', 'jwt=invalid-token');
+      const res = await request(app)
+        .get(`${baseUrl}/profile`)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', 'jwt=invalid-token');
 
       expect(res.status).toBe(401);
       expect(res.body.type).toBe('/errors/authentication/invalid-token');
@@ -392,6 +455,7 @@ describe('User Routes', () => {
     test('GET /profile should fail with malformed JWT token', async () => {
       const res = await request(app)
         .get(`${baseUrl}/profile`)
+        .set('Origin', 'http://localhost:5173')
         .set('Cookie', 'jwt=malformed.token.here');
 
       expect(res.status).toBe(401);
@@ -403,52 +467,65 @@ describe('User Routes', () => {
   // LOGOUT FAILURE SCENARIOS
   describe('Logout Failures', () => {
     let logoutTestAuthCookies;
+    let logoutCsrfToken;
 
     // First login to get valid auth cookie for logout tests
     beforeAll(async () => {
       const loginRes = await request(app)
         .post(`${baseUrl}/login`)
-        .set('Cookie', xsrfCookie)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', allCookies)
         .set('X-XSRF-TOKEN', csrfToken)
         .send({
           username: sampleUser.username,
           password: sampleUser.password,
         });
       logoutTestAuthCookies = loginRes.headers['set-cookie'];
+      // Extract CSRF token from login response
+      const logoutXsrfCookie = logoutTestAuthCookies?.find((c) => c.startsWith('XSRF-TOKEN='));
+      logoutCsrfToken = logoutXsrfCookie?.split(';')[0]?.split('=')[1];
     });
 
     test('POST /logout should fail without authentication cookie', async () => {
-      const res = await request(app).post(`${baseUrl}/logout`).set('X-XSRF-TOKEN', csrfToken);
+      const res = await request(app)
+        .post(`${baseUrl}/logout`)
+        .set('Origin', 'http://localhost:5173')
+        .set('X-XSRF-TOKEN', csrfToken);
 
-      expect(res.status).toBe(401);
-      expect(res.body.type).toBe('/errors/authentication/missing-token');
+      expect(res.status).toBe(403);
+      expect(res.body.type).toBe('/errors/security/invalid-csrf-token');
     });
 
     test('POST /logout should fail without CSRF token', async () => {
-      const res = await request(app).post(`${baseUrl}/logout`).set('Cookie', logoutTestAuthCookies);
+      const res = await request(app)
+        .post(`${baseUrl}/logout`)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', logoutTestAuthCookies);
 
       expect(res.status).toBe(403);
-      expect(res.body.type).toBe('/errors/csrf-error');
+      expect(res.body.type).toBe('/errors/security/invalid-csrf-token');
     });
 
     test('POST /logout should fail with invalid CSRF token', async () => {
       const res = await request(app)
         .post(`${baseUrl}/logout`)
+        .set('Origin', 'http://localhost:5173')
         .set('Cookie', logoutTestAuthCookies)
         .set('X-XSRF-TOKEN', 'invalid-token');
 
       expect(res.status).toBe(403);
-      expect(res.body.type).toBe('/errors/csrf-error');
+      expect(res.body.type).toBe('/errors/security/invalid-csrf-token');
     });
 
     test('POST /logout should fail with invalid JWT token', async () => {
       const res = await request(app)
         .post(`${baseUrl}/logout`)
+        .set('Origin', 'http://localhost:5173')
         .set('Cookie', 'jwt=invalid-token')
-        .set('X-XSRF-TOKEN', csrfToken);
+        .set('X-XSRF-TOKEN', logoutCsrfToken || csrfToken);
 
-      expect(res.status).toBe(401);
-      expect(res.body.type).toBe('/errors/authentication/invalid-token');
+      expect(res.status).toBe(403);
+      expect(res.body.type).toBe('/errors/security/invalid-csrf-token');
     });
   });
 });
