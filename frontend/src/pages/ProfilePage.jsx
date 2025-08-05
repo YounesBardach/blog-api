@@ -3,10 +3,6 @@ import { useAuth } from '../hooks/useAuth';
 const ProfilePage = () => {
   const { user } = useAuth();
 
-  // Since this is a protected route, the AuthProvider ensures that
-  // the user object is available by the time this component renders.
-  // We no longer need a local loading or error state here.
-
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8 bg-gray-50">
       <div className="w-full max-w-2xl">

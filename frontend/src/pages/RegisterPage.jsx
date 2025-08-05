@@ -57,11 +57,19 @@ const RegisterPage = () => {
       } else if (status === 409) {
         // Handle duplicate entry errors
         if (errorData?.type === '/errors/conflict/duplicate-entry') {
-          if (errorData.fields) {
-            Object.entries(errorData.fields).forEach(([field, message]) => {
-              if (message) {
-                setError(field, { type: 'server', message });
-              }
+          // Backend returns { field: ['username'] } or { field: 'username' }
+          if (errorData.field) {
+            const fields = Array.isArray(errorData.field) ? errorData.field : [errorData.field];
+            fields.forEach((fieldName) => {
+              setError(fieldName, {
+                type: 'server',
+                message: errorData.detail || `${fieldName} already exists`,
+              });
+            });
+          } else {
+            setError('root', {
+              type: 'server',
+              message: errorData?.detail || 'A duplicate entry error occurred.',
             });
           }
         } else {
