@@ -102,7 +102,7 @@ const csrfProtection = csrf({
     // Configuration for the CSRF token cookie
     httpOnly: true, // Cookie cannot be accessed by client-side JavaScript
     secure: process.env.NODE_ENV === 'production', // Cookie only sent over HTTPS in production
-    sameSite: 'strict', // Cookie only sent for same-site requests
+    sameSite: 'none',
   },
 });
 
@@ -122,7 +122,7 @@ app.use((req, res, next) => {
         // Ensure XSRF-TOKEN cookie is set with the current token
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'none',
       });
       next();
     });
