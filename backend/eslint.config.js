@@ -1,8 +1,9 @@
-import eslint from '@eslint/js';
+import js from '@eslint/js';
 import prettier from 'eslint-plugin-prettier';
 import globals from 'globals';
 
 export default [
+  // Ignore config
   {
     ignores: [
       'node_modules/**',
@@ -13,6 +14,8 @@ export default [
       '*.config.js',
     ],
   },
+
+  // Base config for all JS files
   {
     files: ['**/*.js'],
     languageOptions: {
@@ -27,9 +30,28 @@ export default [
       prettier,
     },
     rules: {
+      ...js.configs.recommended.rules,
       'prettier/prettier': 'warn',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_|^next$' }],
       'no-console': 'warn',
+    },
+  },
+
+  // Overrides for test files
+  {
+    files: ['**/test/**/*.js', '**/*.test.js', '**/*.spec.js'],
+    languageOptions: {
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        vi: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
     },
   },
 ];

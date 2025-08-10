@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ import { showSuccessToast, showErrorToast } from '../utils/errorHelpers';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
   const {
     register,
@@ -110,6 +110,11 @@ const RegisterPage = () => {
   const onSubmit = (data) => {
     registerMutation.mutate(data);
   };
+
+  // If user is already authenticated, redirect to profile
+  if (isAuthenticated) {
+    return <Navigate to="/profile" replace />;
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

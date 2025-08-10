@@ -19,10 +19,15 @@
     "format": "npm run format --workspaces",
     "format:backend": "npm run format --workspace=backend",
     "format:frontend": "npm run format --workspace=frontend",
-    "test": "npm run test --workspace=backend",
-    "test:coverage": "npm run test:coverage --workspace=backend",
+    "test": "npm run test --workspaces",
+    "test:frontend": "npm run test --workspace=frontend",
+    "test:backend": "npm run test --workspace=backend",
+    "test:coverage": "npm run test:coverage --workspaces",
     "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
     "install:all": "npm install"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

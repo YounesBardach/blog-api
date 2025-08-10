@@ -11,6 +11,7 @@ const sanitizeUsername = (value) => {
 
 const sanitizePassword = (value) => {
   if (!value) return value;
+  // eslint-disable-next-line no-control-regex
   return value.trim().replace(/[\x00-\x1F\x7F-\x9F]/g, ''); // Remove control characters
 };
 

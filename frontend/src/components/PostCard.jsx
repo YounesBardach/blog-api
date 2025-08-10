@@ -35,7 +35,9 @@ const PostCard = ({ post }) => {
           <div className="flex-1">
             <div className="mt-2">
               <p className="text-xl font-semibold text-gray-900">{post.title}</p>
-              <p className="mt-3 text-base text-gray-500">{post.content.substring(0, 150)}...</p>
+              <p className="mt-3 text-base text-gray-500">
+                {post.content.length > 150 ? `${post.content.substring(0, 150)}...` : post.content}
+              </p>
             </div>
           </div>
 
