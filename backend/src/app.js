@@ -64,14 +64,19 @@ logger.info(`Allowed CORS origins: ${allowedOrigins.join(', ')}`); // Log config
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g., mobile apps, curl) in development mode
-      if (!origin && env.NODE_ENV === 'development') return callback(null, true);
-      // Check if the incoming origin is in the list of allowed origins
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-        return callback(new Error(msg), false); // Disallow if origin is not whitelisted
-      }
-      return callback(null, true); // Allow if origin is whitelisted
+      // Always allow requests without an Origin header.
+      // This covers direct browser navigations, server-to-server calls,
+      // Render health checks, curl/postman, etc. These are not CORS requests.
+      if (!origin) return callback(null, true);
+
+      // If no explicit whitelist is configured, allow all origins.
+      if (allowedOrigins.length === 0) return callback(null, true);
+
+      // Enforce whitelist for cross-origin requests
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN'],
