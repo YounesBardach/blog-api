@@ -158,45 +158,6 @@ const errorHandler = (err, req, res, next) => {
       'The CSRF token is invalid or missing.',
       instance
     );
-
-    // Extra server-side diagnostics to help debug cross-origin CSRF issues
-    try {
-      const headerCandidates = [
-        'x-xsrf-token',
-        'X-XSRF-TOKEN',
-        'x-csrf-token',
-        'X-CSRF-Token',
-        'csrf-token',
-      ];
-      const receivedHeaders = headerCandidates
-        .map((name) => ({ name, present: Boolean(req.headers?.[name]) }))
-        .filter((h) => h.present)
-        .map((h) => h.name);
-
-      const rawToken =
-        req.headers?.['x-xsrf-token'] ||
-        req.headers?.['X-XSRF-TOKEN'] ||
-        req.headers?.['x-csrf-token'] ||
-        req.headers?.['X-CSRF-Token'] ||
-        req.headers?.['csrf-token'] ||
-        '';
-      const maskedToken =
-        typeof rawToken === 'string' && rawToken.length > 10
-          ? `${rawToken.slice(0, 4)}...${rawToken.slice(-4)}`
-          : rawToken;
-
-      logger.warn('EBADCSRFTOKEN diagnostics', {
-        hasSecretCookie: Boolean(req.cookies?._csrf),
-        receivedHeaders,
-        tokenPreview: maskedToken,
-        origin: req.headers?.origin,
-        referer: req.headers?.referer,
-        method: req.method,
-        url: req.originalUrl,
-      });
-    } catch {
-      // no-op
-    }
   } else if (err.name === 'RateLimitError') {
     statusCode = 429;
     problemDetails = createProblemDetails(

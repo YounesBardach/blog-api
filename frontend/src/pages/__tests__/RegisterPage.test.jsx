@@ -5,12 +5,13 @@ import RegisterPage from '../RegisterPage';
 import api from '../../config/axios';
 import { showErrorToast, showSuccessToast } from '../../utils/errorHelpers';
 
-// Mock axios
+// Mock axios and ensureCsrfToken for components that prefetch CSRF before POST
 vi.mock('../../config/axios', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
   },
+  ensureCsrfToken: vi.fn().mockResolvedValue('test-csrf-token'),
 }));
 
 vi.mock('../../utils/errorHelpers', async () => {

@@ -15,15 +15,14 @@ const options = {
 ## Authentication & CSRF
 This API uses cookie-based auth and CSRF protection.
 
-CSRF token acquisition:
-- On any GET request, the server sets an 'XSRF-TOKEN' cookie.
-- Cross-origin clients can also call 'GET /api/csrf-token' to receive '{ csrfToken }' in the JSON response.
+CSRF token acquisition (JSON-only):
+- Call 'GET /api/csrf-token' to receive '{ csrfToken }' in the JSON response. The server also issues the readable 'XSRF-TOKEN' cookie on that request.
 
 How to send the token:
 - For state-changing requests (POST, PUT, PATCH, DELETE), include the token in the 'X-XSRF-TOKEN' header.
-- When using Axios, enable 'withCredentials' and either let Axios read the cookie (same-origin) or fetch '/api/csrf-token' and set the header value from 'resp.data.csrfToken'.
+- When using Axios cross-origin, enable 'withCredentials' and fetch '/api/csrf-token' to set the header from 'resp.data.csrfToken'. Same-origin clients may rely on the cookie.
 
-Note: No custom CSRF response headers are used; the JSON endpoint is the recommended cross-origin approach.`,
+Note: We do not expose CSRF via custom response headers. Use the JSON endpoint.`,
       contact: {
         name: 'API Support', // Contact name for API support
         email: 'support@example.com', // Contact email for API support

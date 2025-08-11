@@ -173,48 +173,6 @@ app.get('/api/csrf-token', csrfProtection, (req, res) => {
   res.status(200).json({ success: true, csrfToken: token });
 });
 
-// Lightweight diagnostics endpoint to inspect CSRF-related state without throwing
-app.get('/api/debug/csrf-state', (req, res) => {
-  // Initialize secret and issue token for this GET without validating any header
-  csrfProtection(req, res, () => {
-    const headerCandidates = [
-      'x-xsrf-token',
-      'X-XSRF-TOKEN',
-      'x-csrf-token',
-      'X-CSRF-Token',
-      'csrf-token',
-    ];
-
-    const receivedHeaders = headerCandidates
-      .map((name) => ({ name, present: Boolean(req.headers?.[name.toLowerCase()]) }))
-      .filter((h) => h.present)
-      .map((h) => h.name);
-
-    const rawHeaderToken =
-      req.headers?.['x-xsrf-token'] ||
-      req.headers?.['x-csrf-token'] ||
-      req.headers?.['csrf-token'] ||
-      '';
-
-    const mask = (val) =>
-      typeof val === 'string' && val.length > 10 ? `${val.slice(0, 4)}...${val.slice(-4)}` : val;
-
-    const token = req.csrfToken();
-
-    res.status(200).json({
-      success: true,
-      hasSecretCookie: Boolean(req.cookies?._csrf),
-      xsrfTokenCookiePresent: Boolean(req.cookies?.['XSRF-TOKEN']),
-      xsrfTokenCookiePreview: mask(req.cookies?.['XSRF-TOKEN'] || ''),
-      receivedHeaders,
-      headerTokenPreview: mask(rawHeaderToken),
-      issuedTokenPreview: mask(token),
-      origin: req.headers?.origin || null,
-      referer: req.headers?.referer || null,
-    });
-  });
-});
-
 // API routes with rate limiting
 app.use('/api/posts', limiter, postRoutes);
 app.use('/api/users', limiter, userRoutes);
