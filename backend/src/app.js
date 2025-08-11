@@ -56,6 +56,9 @@ const env = cleanEnv(process.env, {
 // Initialize the Express application
 const app = express();
 
+// Inform Express it's behind a proxy (e.g., Render, Heroku) so it can trust X-Forwarded-* headers
+app.set('trust proxy', 1);
+
 // Configure CORS (Cross-Origin Resource Sharing)
 // Get allowed origins from environment variable, split by comma, and filter out empty strings
 const allowedOrigins = env.CORS_ORIGINS.split(',').filter(Boolean);
@@ -177,6 +180,48 @@ app.get('/', (req, res) => {
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
   const token = req.csrfToken();
   res.status(200).json({ success: true, csrfToken: token });
+});
+
+// Lightweight diagnostics endpoint to inspect CSRF-related state without throwing
+app.get('/api/debug/csrf-state', (req, res) => {
+  // Initialize secret and issue token for this GET without validating any header
+  csrfProtection(req, res, () => {
+    const headerCandidates = [
+      'x-xsrf-token',
+      'X-XSRF-TOKEN',
+      'x-csrf-token',
+      'X-CSRF-Token',
+      'csrf-token',
+    ];
+
+    const receivedHeaders = headerCandidates
+      .map((name) => ({ name, present: Boolean(req.headers?.[name.toLowerCase()]) }))
+      .filter((h) => h.present)
+      .map((h) => h.name);
+
+    const rawHeaderToken =
+      req.headers?.['x-xsrf-token'] ||
+      req.headers?.['x-csrf-token'] ||
+      req.headers?.['csrf-token'] ||
+      '';
+
+    const mask = (val) =>
+      typeof val === 'string' && val.length > 10 ? `${val.slice(0, 4)}...${val.slice(-4)}` : val;
+
+    const token = req.csrfToken();
+
+    res.status(200).json({
+      success: true,
+      hasSecretCookie: Boolean(req.cookies?._csrf),
+      xsrfTokenCookiePresent: Boolean(req.cookies?.['XSRF-TOKEN']),
+      xsrfTokenCookiePreview: mask(req.cookies?.['XSRF-TOKEN'] || ''),
+      receivedHeaders,
+      headerTokenPreview: mask(rawHeaderToken),
+      issuedTokenPreview: mask(token),
+      origin: req.headers?.origin || null,
+      referer: req.headers?.referer || null,
+    });
+  });
 });
 
 // API routes with rate limiting
