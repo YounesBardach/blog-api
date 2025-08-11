@@ -79,7 +79,16 @@ app.use(
       return callback(new Error(msg), false);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN'],
+    // Allow common CSRF header variants in addition to content/auth headers
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-XSRF-TOKEN',
+      'x-xsrf-token',
+      'X-CSRF-Token',
+      'x-csrf-token',
+      'csrf-token',
+    ],
     credentials: true,
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -99,11 +108,19 @@ app.use(cookieParser());
 // Also sets secret cookie in response used to validate csrf token
 const csrfProtection = csrf({
   cookie: {
-    // Configuration for the CSRF token cookie
-    httpOnly: true, // Cookie cannot be accessed by client-side JavaScript
-    secure: process.env.NODE_ENV === 'production', // Cookie only sent over HTTPS in production
+    // Configuration for the CSRF secret cookie
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'none',
   },
+  // Explicitly read the token from commonly used header names to avoid case/preflight issues
+  value: (req) =>
+    req.headers['x-xsrf-token'] ||
+    req.headers['X-XSRF-TOKEN'] ||
+    req.headers['x-csrf-token'] ||
+    req.headers['X-CSRF-Token'] ||
+    req.headers['csrf-token'] ||
+    '',
 });
 
 // Apply CSRF protection selectively based on HTTP method
