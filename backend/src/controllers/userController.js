@@ -7,7 +7,8 @@ const setAuthCookie = (res, token) => {
     res.cookie('jwt', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      // Use 'none' for cross-origin frontend ↔ backend to ensure cookie is sent with credentials
+      sameSite: 'none',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
   } catch (cookieError) {
@@ -42,7 +43,7 @@ export const logoutUser = asyncHandler(async (req, res, next) => {
       httpOnly: true,
       expires: new Date(0),
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
     });
     res
       .status(200)
