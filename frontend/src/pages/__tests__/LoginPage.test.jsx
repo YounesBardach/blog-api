@@ -4,13 +4,12 @@ import { renderWithProviders } from '../../test/utils';
 import LoginPage from '../LoginPage';
 import api from '../../config/axios';
 
-// Mock axios and ensureCsrfToken for components that prefetch CSRF before POST
+// Mock axios module (no CSRF prefetch at page level anymore)
 vi.mock('../../config/axios', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
   },
-  ensureCsrfToken: vi.fn().mockResolvedValue('test-csrf-token'),
 }));
 
 describe('LoginPage', () => {
