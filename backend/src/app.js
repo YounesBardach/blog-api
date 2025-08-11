@@ -131,26 +131,12 @@ app.use((req, res, next) => {
   const stateChangingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
   if (stateChangingMethods.includes(req.method)) {
-    // Apply full CSRF protection for methods that change server state
+    // Apply CSRF validation only for state-changing methods
     return csrfProtection(req, res, next);
-  } else if (req.method === 'GET') {
-    // For GET requests, ensure the CSRF secret is initialized
-    // and set a new XSRF-TOKEN cookie with a fresh token for client-side use.
-    // A valid request would have 3 elements: the secret, the token and the header.
-    csrfProtection(req, res, () => {
-      const token = req.csrfToken();
-      res.cookie('XSRF-TOKEN', token, {
-        // Ensure XSRF-TOKEN cookie is set with the current token
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-      });
-      next();
-    });
-  } else {
-    // For other methods (like OPTIONS, HEAD), skip CSRF protection
-    next();
   }
+  // For safe methods (GET/HEAD/OPTIONS), do not rotate/set tokens here
+  // Token issuance happens explicitly via GET /api/csrf-token
+  return next();
 });
 
 // Basic rate limiting middleware configuration
@@ -176,9 +162,14 @@ app.get('/', (req, res) => {
   });
 });
 
-// Explicit CSRF token endpoint (JSON-only backup)
+// Explicit CSRF token endpoint: sets readable XSRF-TOKEN and returns token in JSON
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
   const token = req.csrfToken();
+  res.cookie('XSRF-TOKEN', token, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+  });
   res.status(200).json({ success: true, csrfToken: token });
 });
 
