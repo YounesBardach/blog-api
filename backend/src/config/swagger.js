@@ -12,16 +12,18 @@ const options = {
       // Detailed description of the API, including authentication information
       description: `API documentation for the Blog application
 
-## Authentication
-This API uses CSRF protection.
-When using this Swagger UI:
-- An XSRF-TOKEN cookie is automatically set by the server upon any GET request.
-- This UI will automatically read this cookie and include the token in the 'X-XSRF-TOKEN' header for all subsequent state-changing requests (POST, PUT, DELETE, PATCH).
+## Authentication & CSRF
+This API uses cookie-based auth and CSRF protection.
 
-For client applications (like a React frontend):
-1. Ensure a GET request is made to any API endpoint first to receive the 'XSRF-TOKEN' cookie. This cookie is configured to be readable by JavaScript.
-2. Your application should read this 'XSRF-TOKEN' cookie.
-3. For any state-changing requests (POST, PUT, DELETE, PATCH), include the value of the token in an 'X-XSRF-TOKEN' HTTP header.`,
+CSRF token acquisition:
+- On any GET request, the server sets an 'XSRF-TOKEN' cookie.
+- Cross-origin clients can also call 'GET /api/csrf-token' to receive '{ csrfToken }' in the JSON response.
+
+How to send the token:
+- For state-changing requests (POST, PUT, PATCH, DELETE), include the token in the 'X-XSRF-TOKEN' header.
+- When using Axios, enable 'withCredentials' and either let Axios read the cookie (same-origin) or fetch '/api/csrf-token' and set the header value from 'resp.data.csrfToken'.
+
+Note: No custom CSRF response headers are used; the JSON endpoint is the recommended cross-origin approach.`,
       contact: {
         name: 'API Support', // Contact name for API support
         email: 'support@example.com', // Contact email for API support
@@ -52,7 +54,7 @@ For client applications (like a React frontend):
           in: 'header', // Location of the API key (header)
           name: 'X-XSRF-TOKEN', // Standard header name for CSRF tokens
           description:
-            'CSRF token obtained from the XSRF-TOKEN cookie (set automatically on GET requests) and sent as a header for state-changing requests.',
+            "CSRF token sent in the 'X-XSRF-TOKEN' header for state-changing requests. Obtain it from the 'XSRF-TOKEN' cookie or via 'GET /api/csrf-token' (JSON: { csrfToken }).",
         },
       },
       // Define reusable schema definitions for request and response bodies

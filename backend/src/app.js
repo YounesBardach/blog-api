@@ -118,7 +118,8 @@ app.use((req, res, next) => {
     // and set a new XSRF-TOKEN cookie with a fresh token for client-side use.
     // A valid request would have 3 elements: the secret, the token and the header.
     csrfProtection(req, res, () => {
-      res.cookie('XSRF-TOKEN', req.csrfToken(), {
+      const token = req.csrfToken();
+      res.cookie('XSRF-TOKEN', token, {
         // Ensure XSRF-TOKEN cookie is set with the current token
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
@@ -153,6 +154,12 @@ app.get('/', (req, res) => {
     status: 'success',
     message: 'Welcome to the Blog API',
   });
+});
+
+// Explicit CSRF token endpoint (JSON-only backup)
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
+  const token = req.csrfToken();
+  res.status(200).json({ success: true, csrfToken: token });
 });
 
 // API routes with rate limiting
