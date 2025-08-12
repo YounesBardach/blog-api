@@ -55,7 +55,9 @@ describe('AuthProvider', () => {
   });
 
   it('provides user and isAuthenticated after profile success', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: { id: 1, username: 'test' } } } });
+    api.get.mockResolvedValue({
+      data: { authenticated: true, data: { user: { id: 1, username: 'test' } } },
+    });
     renderWithQueryClient(
       <AuthProvider>
         <AuthConsumer />
@@ -66,8 +68,8 @@ describe('AuthProvider', () => {
   });
 
   it('login invalidates profile and refetches', async () => {
-    const first = { data: { data: { user: { id: 1, username: 'old' } } } };
-    const second = { data: { data: { user: { id: 1, username: 'new' } } } };
+    const first = { data: { authenticated: true, data: { user: { id: 1, username: 'old' } } } };
+    const second = { data: { authenticated: true, data: { user: { id: 1, username: 'new' } } } };
     api.get.mockResolvedValueOnce(first).mockResolvedValueOnce(second);
 
     const userEv = userEvent.setup();
@@ -84,8 +86,10 @@ describe('AuthProvider', () => {
 
   it('logout posts, clears user and shows success toast', async () => {
     api.get
-      .mockResolvedValueOnce({ data: { data: { user: { id: 1, username: 'test' } } } })
-      .mockResolvedValueOnce({ data: { data: { user: null } } });
+      .mockResolvedValueOnce({
+        data: { authenticated: true, data: { user: { id: 1, username: 'test' } } },
+      })
+      .mockResolvedValueOnce({ data: { authenticated: false } });
     api.post.mockResolvedValue({ data: { success: true } });
 
     const userEv = userEvent.setup();
@@ -105,7 +109,9 @@ describe('AuthProvider', () => {
   });
 
   it('logout error shows error toast and does not clear user', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: { id: 1, username: 'test' } } } });
+    api.get.mockResolvedValue({
+      data: { authenticated: true, data: { user: { id: 1, username: 'test' } } },
+    });
     api.post.mockRejectedValue(new Error('boom'));
 
     const userEv = userEvent.setup();

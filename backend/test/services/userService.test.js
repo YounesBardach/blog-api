@@ -16,6 +16,10 @@ vi.mock('../../src/config/prisma.js', () => ({
 vi.mock('jsonwebtoken', () => ({
   default: {
     sign: vi.fn(() => 'mock-token'),
+    verify: vi.fn((token) => {
+      if (token === 'valid-token') return { id: 'user-123' };
+      throw new Error('invalid');
+    }),
   },
 }));
 
@@ -156,5 +160,21 @@ describe('userService', () => {
         code: 'USER_NOT_FOUND',
       },
     });
+  });
+
+  test('getSessionUserFromToken returns user for valid token', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'user-123',
+      username: 'testuser',
+      role: 'READER',
+      name: 'Test',
+    });
+    const user = await userService.getSessionUserFromToken('valid-token');
+    expect(user).toMatchObject({ id: 'user-123', username: 'testuser' });
+  });
+
+  test('getSessionUserFromToken returns null for invalid token', async () => {
+    const user = await userService.getSessionUserFromToken('bad-token');
+    expect(user).toBeNull();
   });
 });

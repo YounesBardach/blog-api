@@ -38,13 +38,9 @@ describe('PostCreatePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     user = userEvent.setup();
-    // Mock admin user for these tests
+    // Mock admin user for these tests via session probe
     api.get.mockResolvedValue({
-      data: {
-        data: {
-          user: { id: 1, username: 'admin', role: 'ADMIN' },
-        },
-      },
+      data: { authenticated: true, data: { user: { id: 1, username: 'admin', role: 'ADMIN' } } },
     });
   });
 
@@ -154,13 +150,7 @@ describe('PostCreatePage', () => {
 
   it('should show error for unauthenticated user', async () => {
     // Mock unauthenticated user
-    api.get.mockResolvedValue({
-      data: {
-        data: {
-          user: null,
-        },
-      },
-    });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<PostCreatePage />);
 
@@ -172,11 +162,7 @@ describe('PostCreatePage', () => {
   it('should show error for non-admin user', async () => {
     // Mock regular user (non-admin)
     api.get.mockResolvedValue({
-      data: {
-        data: {
-          user: { id: 1, username: 'user', role: 'USER' },
-        },
-      },
+      data: { authenticated: true, data: { user: { id: 1, username: 'user', role: 'USER' } } },
     });
 
     renderWithProviders(<PostCreatePage />);

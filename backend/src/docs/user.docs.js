@@ -171,3 +171,33 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+
+/**
+ * @swagger
+ * /api/users/session:
+ *   get:
+ *     summary: Session probe (never errors)
+ *     tags: [2. Users]
+ *     description: >
+ *       Returns `{ authenticated: true, data: { user } }` when the auth cookie is valid, otherwise `{ authenticated: false }` with HTTP 200.
+ *     responses:
+ *       200:
+ *         description: Session state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 authenticated:
+ *                   type: boolean
+ *                   example: false
+ *                 data:
+ *                   type: object
+ *                   nullable: true
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ */

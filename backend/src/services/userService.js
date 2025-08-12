@@ -112,3 +112,22 @@ export const findUserProfileById = async (userId) => {
   }
   return user;
 };
+
+// Returns a user object from a JWT token if valid; otherwise null
+export const getSessionUserFromToken = async (token) => {
+  if (!token) return null;
+  // JWT verification failure is an expected "unauthenticated" case → return null.
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    return null;
+  }
+
+  // DB errors should bubble up to errorMiddleware; do not swallow here
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.id },
+    select: { id: true, username: true, role: true, name: true },
+  });
+  return user || null;
+};

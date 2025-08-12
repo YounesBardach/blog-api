@@ -54,14 +54,13 @@ describe('PostDetailPage', () => {
     vi.clearAllMocks();
     user = userEvent.setup();
 
-    // Mock authenticated user
+    // Mock authenticated user via session probe
     api.get.mockImplementation((url) => {
-      if (url === '/users/profile') {
+      if (url === '/users/session') {
         return Promise.resolve({
           data: {
-            data: {
-              user: { id: 1, username: 'testuser', role: 'USER' },
-            },
+            authenticated: true,
+            data: { user: { id: 1, username: 'testuser', role: 'USER' } },
           },
         });
       }
@@ -128,12 +127,11 @@ describe('PostDetailPage', () => {
   it('should show empty state when no comments', async () => {
     // Mock empty comments
     api.get.mockImplementation((url) => {
-      if (url === '/users/profile') {
+      if (url === '/users/session') {
         return Promise.resolve({
           data: {
-            data: {
-              user: { id: 1, username: 'testuser', role: 'USER' },
-            },
+            authenticated: true,
+            data: { user: { id: 1, username: 'testuser', role: 'USER' } },
           },
         });
       }

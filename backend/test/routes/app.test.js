@@ -29,12 +29,14 @@ describe('App Integration', () => {
     });
   });
 
-  test('GET / should set CSRF token cookie', async () => {
-    const res = await request(app).get('/').set('Origin', 'http://localhost:5173');
+  test('GET /api/csrf-token should set XSRF-TOKEN cookie and return token in JSON', async () => {
+    const res = await request(app).get('/api/csrf-token').set('Origin', 'http://localhost:5173');
     const cookies = res.headers['set-cookie'] || [];
 
     const xsrfTokenCookie = cookies.find((cookie) => cookie.startsWith('XSRF-TOKEN='));
 
+    expect(res.status).toBe(200);
+    expect(res.body.csrfToken).toBeDefined();
     expect(xsrfTokenCookie).toBeDefined();
     expect(xsrfTokenCookie).toContain('XSRF-TOKEN=');
   });

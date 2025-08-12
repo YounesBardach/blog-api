@@ -30,10 +30,10 @@ beforeAll(async () => {
     },
   });
 
-  // Get CSRF token before any state-changing request
-  const res = await request(app).get('/').set('Origin', 'http://localhost:5173');
-  allCookies = res.headers['set-cookie']; // Store all cookies, including the CSRF secret
-  const xsrfCookie = allCookies?.find((c) => c.startsWith('XSRF-TOKEN='));
+  // Get CSRF token before any state-changing request from the dedicated endpoint
+  const res = await request(app).get('/api/csrf-token').set('Origin', 'http://localhost:5173');
+  allCookies = res.headers['set-cookie'] || []; // Store all cookies, including the CSRF secret
+  const xsrfCookie = allCookies.find((c) => c.startsWith('XSRF-TOKEN='));
   csrfToken = xsrfCookie?.split(';')[0]?.split('=')[1];
 });
 
@@ -119,6 +119,20 @@ describe('User Routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.status).toBe('success');
+      expect(res.body.data.user.username).toBe(sampleUser.username);
+    });
+
+    test('GET /session returns authenticated true with user when logged in', async () => {
+      const combinedCookies = [...allCookies, ...userAuthCookies];
+
+      const res = await request(app)
+        .get(`${baseUrl}/session`)
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', combinedCookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.authenticated).toBe(true);
       expect(res.body.data.user.username).toBe(sampleUser.username);
     });
 
@@ -461,6 +475,17 @@ describe('User Routes', () => {
       expect(res.status).toBe(401);
       expect(res.body.type).toBe('/errors/authentication/invalid-token');
       expect(res.body.title).toBe('Invalid Token');
+    });
+  });
+
+  describe('Session endpoint', () => {
+    test('GET /session returns authenticated false when not logged in', async () => {
+      const res = await request(app)
+        .get(`${baseUrl}/session`)
+        .set('Origin', 'http://localhost:5173');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.authenticated).toBe(false);
     });
   });
 

@@ -25,13 +25,7 @@ describe('ProfilePage', () => {
 
   it('should render user profile information', async () => {
     // Mock authenticated user
-    api.get.mockResolvedValue({
-      data: {
-        data: {
-          user: mockUser,
-        },
-      },
-    });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: mockUser } } });
 
     renderWithProviders(<ProfilePage />);
 
@@ -46,13 +40,7 @@ describe('ProfilePage', () => {
   });
 
   it('should display user avatar with first letter of name', async () => {
-    api.get.mockResolvedValue({
-      data: {
-        data: {
-          user: mockUser,
-        },
-      },
-    });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: mockUser } } });
 
     renderWithProviders(<ProfilePage />);
 
@@ -62,13 +50,7 @@ describe('ProfilePage', () => {
   });
 
   it('should render profile sections', async () => {
-    api.get.mockResolvedValue({
-      data: {
-        data: {
-          user: mockUser,
-        },
-      },
-    });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: mockUser } } });
 
     renderWithProviders(<ProfilePage />);
 

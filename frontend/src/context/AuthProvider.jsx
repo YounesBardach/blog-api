@@ -8,14 +8,22 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const queryClient = useQueryClient();
 
-  // Main query to determine if user is authenticated
+  // Session probe: never errors. If authenticated, sets user in context.
   const { isLoading } = useQuery({
-    queryKey: ['profile'],
+    queryKey: ['session'],
     queryFn: async () => {
-      const res = await api.get('/users/profile');
-      const user = res.data.data.user;
-      setUser(user);
-      return user;
+      try {
+        const session = await api.get('/users/session');
+        if (session.data?.authenticated && session.data?.data?.user) {
+          const user = session.data.data.user;
+          setUser(user);
+          return user;
+        }
+      } catch {
+        // Treat any failure as unauthenticated
+      }
+      setUser(null);
+      return null;
     },
     retry: false,
     staleTime: Infinity,
@@ -28,7 +36,7 @@ export const AuthProvider = ({ children }) => {
       showSuccessToast('Logged out successfully. See you next time!');
       // Remove cached user on successful logout
       setUser(null);
-      queryClient.removeQueries({ queryKey: ['profile'] });
+      queryClient.removeQueries({ queryKey: ['session'] });
     },
     onError: (error) => {
       showErrorToast(error);
@@ -37,9 +45,8 @@ export const AuthProvider = ({ children }) => {
 
   // Helper functions exposed via context
   const login = () => {
-    // Instead of setting incomplete user data, invalidate the profile query
-    // to refetch complete user data including createdAt
-    queryClient.invalidateQueries({ queryKey: ['profile'] });
+    // Invalidate to re-run /users/session and pick up the new auth cookie
+    queryClient.invalidateQueries({ queryKey: ['session'] });
   };
 
   const logout = () => {

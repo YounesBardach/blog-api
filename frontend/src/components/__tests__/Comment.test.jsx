@@ -41,7 +41,7 @@ describe('Comment', () => {
   });
 
   it('should render comment information correctly', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -52,7 +52,7 @@ describe('Comment', () => {
   });
 
   it('should display author initial in avatar', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -62,7 +62,7 @@ describe('Comment', () => {
   });
 
   it('should format date correctly', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -85,7 +85,7 @@ describe('Comment', () => {
 
   it('should show edit/delete buttons for comment author', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -97,7 +97,7 @@ describe('Comment', () => {
 
   it('should show edit/delete buttons for admin users', async () => {
     const adminUser = { id: 2, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: adminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: adminUser } } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -109,7 +109,7 @@ describe('Comment', () => {
 
   it('should enter edit mode when edit button is clicked', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -131,7 +131,7 @@ describe('Comment', () => {
 
   it('should cancel edit mode when cancel button is clicked', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -154,7 +154,7 @@ describe('Comment', () => {
 
   it('should handle successful comment edit', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
     api.put.mockResolvedValue({ data: { success: true } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
@@ -185,7 +185,7 @@ describe('Comment', () => {
 
   it('should show validation errors for empty content', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -212,7 +212,7 @@ describe('Comment', () => {
 
   it('should show delete confirmation modal when delete button is clicked', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -235,7 +235,7 @@ describe('Comment', () => {
 
   it('should cancel delete when cancel button is clicked', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
 
@@ -259,7 +259,7 @@ describe('Comment', () => {
 
   it('should handle successful comment deletion', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
     api.delete.mockResolvedValue({ data: { success: true } });
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
@@ -284,7 +284,7 @@ describe('Comment', () => {
 
   it('should handle delete errors', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
     api.delete.mockRejectedValue(new Error('Delete failed'));
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
@@ -319,7 +319,7 @@ describe('Comment', () => {
 
   it('should disable save button while editing', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
     api.put.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);
@@ -348,7 +348,7 @@ describe('Comment', () => {
 
   it('should disable delete button while deleting', async () => {
     const authorUser = { id: 1, username: 'testauthor', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: authorUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: authorUser } } });
     api.delete.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     renderWithProviders(<Comment comment={testComment} postId={1} />);

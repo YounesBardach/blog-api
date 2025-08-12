@@ -58,9 +58,9 @@ beforeAll(async () => {
   });
 
   // Get CSRF token
-  const res = await request(app).get('/').set('Origin', 'http://localhost:5173');
-  allCookies = res.headers['set-cookie'];
-  const xsrfCookie = allCookies?.find((c) => c.startsWith('XSRF-TOKEN='));
+  const res = await request(app).get('/api/csrf-token').set('Origin', 'http://localhost:5173');
+  allCookies = res.headers['set-cookie'] || [];
+  const xsrfCookie = allCookies.find((c) => c.startsWith('XSRF-TOKEN='));
   csrfToken = xsrfCookie?.split(';')[0]?.split('=')[1];
 
   // Login regular user

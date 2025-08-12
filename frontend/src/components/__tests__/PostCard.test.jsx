@@ -44,7 +44,7 @@ describe('PostCard', () => {
   // No extra router: renderWithProviders already wraps BrowserRouter
 
   it('should render post information correctly', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<PostCard post={testPost} />);
 
@@ -58,7 +58,7 @@ describe('PostCard', () => {
   });
 
   it('should display exactly 150 characters plus ellipsis when content is long', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     const longContent = 'a'.repeat(200); // deterministic > 150 chars
     const expected = longContent.slice(0, 150) + '...';
@@ -71,7 +71,7 @@ describe('PostCard', () => {
   });
 
   it('should not show ellipsis for short content', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     const shortPost = {
       ...testPost,
@@ -87,7 +87,7 @@ describe('PostCard', () => {
   });
 
   it('should show author initial in avatar', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<PostCard post={testPost} />);
 
@@ -97,7 +97,7 @@ describe('PostCard', () => {
   });
 
   it('should format date correctly', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<PostCard post={testPost} />);
 
@@ -108,7 +108,7 @@ describe('PostCard', () => {
   });
 
   it('should not show edit/delete buttons for unauthenticated users', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<PostCard post={testPost} />);
 
@@ -120,7 +120,7 @@ describe('PostCard', () => {
 
   it('should not show edit/delete buttons for regular users', async () => {
     const regularUser = { id: 1, username: 'testuser', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: regularUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: regularUser } } });
 
     renderWithProviders(<PostCard post={testPost} />);
 
@@ -132,7 +132,7 @@ describe('PostCard', () => {
 
   it('should show edit/delete buttons for admin users', async () => {
     const adminUser = { id: 1, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: adminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: adminUser } } });
 
     renderWithProviders(<PostCard post={testPost} />);
 
@@ -144,7 +144,7 @@ describe('PostCard', () => {
 
   it('should show delete confirmation modal when delete button is clicked', async () => {
     const adminUser = { id: 1, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: adminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: adminUser } } });
 
     renderWithProviders(<PostCard post={testPost} />);
 
@@ -168,7 +168,7 @@ describe('PostCard', () => {
 
   it('should cancel delete when cancel button is clicked', async () => {
     const adminUser = { id: 1, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: adminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: adminUser } } });
 
     renderWithProviders(<PostCard post={testPost} />);
 
@@ -192,7 +192,7 @@ describe('PostCard', () => {
 
   it('should handle successful post deletion', async () => {
     const adminUser = { id: 1, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: adminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: adminUser } } });
     api.delete.mockResolvedValue({ data: { success: true } });
 
     renderWithProviders(<PostCard post={testPost} />);
@@ -217,7 +217,7 @@ describe('PostCard', () => {
 
   it('should handle delete errors', async () => {
     const adminUser = { id: 1, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: adminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: adminUser } } });
     api.delete.mockRejectedValue(new Error('Delete failed'));
 
     renderWithProviders(<PostCard post={testPost} />);
@@ -249,7 +249,7 @@ describe('PostCard', () => {
 
   it('should disable delete button while deleting', async () => {
     const adminUser = { id: 1, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: adminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: adminUser } } });
     api.delete.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     renderWithProviders(<PostCard post={testPost} />);
@@ -274,7 +274,7 @@ describe('PostCard', () => {
   });
 
   it('should navigate to post detail page when clicked', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
     const pushSpy = vi.spyOn(window.history, 'pushState');
 
     renderWithProviders(<PostCard post={testPost} />);
@@ -294,7 +294,7 @@ describe('PostCard', () => {
 
   it('should navigate to edit page for admin users when Edit is clicked', async () => {
     const adminUser = { id: 1, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: adminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: adminUser } } });
     const pushSpy = vi.spyOn(window.history, 'pushState');
 
     renderWithProviders(<PostCard post={testPost} />);

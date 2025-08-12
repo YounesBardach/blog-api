@@ -1,5 +1,3 @@
-# Temporary README.md
-
 # Blog API & React Frontend (Full‑Stack Monorepo)
 
 A full‑stack blog application with an Express + Prisma backend and a React +
@@ -12,7 +10,32 @@ tooling, comprehensive tests, and API documentation.
 - npm >= 9
 - PostgreSQL (local) for the backend
 
-## Quick start
+## Live URLs
+
+- Frontend (Netlify): https://blog-api-frontend.netlify.app/
+- Backend (Render): https://blog-api-6fdo.onrender.com/
+- API Docs (Swagger): https://blog-api-6fdo.onrender.com/api-docs
+
+Demo users (seeded on deploy):
+
+- Admin: `admin` / `Admin123!`
+- Regular: `user` / `User123!`
+
+Notes
+
+- CSRF: The backend issues an `XSRF-TOKEN` cookie and returns `{ csrfToken }` at
+  `GET /api/csrf-token`. The frontend automatically fetches a fresh token before
+  state‑changing requests and sends it in the `X-XSRF-TOKEN` header.
+- Auth: Cookie `jwt` uses `SameSite=None; Secure` in production for
+  cross‑origin.
+
+- Session probe: Use `GET /api/users/session` to check whether a user is
+  authenticated without incurring a 401. It returns `200` with either
+  `{ authenticated: true, data: { user } }` or `{ authenticated: false }`. The
+  frontend `AuthProvider` calls this endpoint; if authenticated, it sets the
+  user in context and avoids red console errors from a 401-only probe.
+
+## Quick start (local)
 
 ```bash
 # From the repository root
@@ -38,7 +61,15 @@ npm run dev
 Create `backend/.env` with values similar to:
 
 ```
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/blog_api?schema=public
+
+Frontend (Vite): create `frontend/.env.local`
+
+```
+
+VITE_API_URL=http://localhost:5000
+
+```
+DATABASE_URL=postgresql://USERNAME:PASSWORD@localhost:5432/DATABASE_NAME?schema=public
 PORT=5000
 NODE_ENV=development
 JWT_SECRET=replace-with-strong-secret
@@ -131,6 +162,11 @@ npm run format
 
 ## Notes
 
+- The 401 entries you may see in the browser console for `GET /users/profile`
+  when logged‑out are expected. They are a lightweight way to check session
+  state. To remove the red console lines entirely, you can switch to a public
+  `GET /api/session` endpoint that returns `{ authenticated: false }` with
+  HTTP 200.
 - The backend uses CSRF protection and secure cookie practices; adjust
   `CORS_ORIGINS` and cookie flags for your deployment environment.
 - Node 20+ is required across the project to match dependency engines (e.g.,
@@ -142,3 +178,25 @@ npm run format
 - Containerization (Dockerfiles + docker‑compose) and health checks
 - End‑to‑end tests (Playwright/Cypress) for main flows
 - Observability (structured logs shipping, error tracking)
+
+## Deployment (Render + Netlify)
+
+Backend (Render)
+
+- Start command (runs migrations, seeds idempotently, then starts server):
+
+  ```bash
+  npx prisma migrate deploy && node prisma/seed.js && npm start
+  ```
+
+- Important env vars:
+  - `PORT` (provided by Render)
+  - `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS` (include your Netlify domain),
+    `NODE_ENV=production`
+
+Frontend (Netlify)
+
+- Set env var:
+  - `VITE_API_URL=https://blog-api-6fdo.onrender.com`
+- Build command: `npm run build --workspace=frontend`
+- Publish directory: `frontend/dist`

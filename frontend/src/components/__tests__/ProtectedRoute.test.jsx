@@ -19,7 +19,7 @@ describe('ProtectedRoute', () => {
 
   it('should render children when user is authenticated', async () => {
     const mockUser = { id: 1, username: 'testuser', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: mockUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: mockUser } } });
 
     renderWithProviders(
       <ProtectedRoute>
@@ -34,7 +34,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('should redirect to login when user is not authenticated', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
     const replaceSpy = vi.spyOn(window.history, 'replaceState');
 
     renderWithProviders(

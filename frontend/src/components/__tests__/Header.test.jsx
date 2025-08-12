@@ -21,7 +21,7 @@ describe('Header', () => {
   });
 
   it('should render header with title', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<Header />);
 
@@ -31,7 +31,7 @@ describe('Header', () => {
   });
 
   it('should show login/register links when user is not authenticated', async () => {
-    api.get.mockResolvedValue({ data: { data: { user: null } } });
+    api.get.mockResolvedValue({ data: { authenticated: false } });
 
     renderWithProviders(<Header />);
 
@@ -42,7 +42,7 @@ describe('Header', () => {
 
   it('should show user menu when user is authenticated', async () => {
     const mockUser = { id: 1, username: 'testuser', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: mockUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: mockUser } } });
 
     renderWithProviders(<Header />);
 
@@ -53,7 +53,7 @@ describe('Header', () => {
 
   it('should show create post link for admin users', async () => {
     const mockAdminUser = { id: 1, username: 'admin', role: 'ADMIN' };
-    api.get.mockResolvedValue({ data: { data: { user: mockAdminUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: mockAdminUser } } });
 
     renderWithProviders(<Header />);
 
@@ -63,7 +63,7 @@ describe('Header', () => {
 
   it('should not show create post link for regular users', async () => {
     const mockUser = { id: 1, username: 'testuser', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: mockUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: mockUser } } });
 
     renderWithProviders(<Header />);
 
@@ -74,7 +74,7 @@ describe('Header', () => {
 
   it('should handle logout when logout button is clicked', async () => {
     const mockUser = { id: 1, username: 'testuser', role: 'USER' };
-    api.get.mockResolvedValue({ data: { data: { user: mockUser } } });
+    api.get.mockResolvedValue({ data: { authenticated: true, data: { user: mockUser } } });
     api.post.mockResolvedValue({ data: { success: true } });
 
     renderWithProviders(<Header />);

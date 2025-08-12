@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import * as userService from '../services/userService.js';
+import { getSessionUserFromToken } from '../services/userService.js';
 
 // Helper function to set the auth cookie
 const setAuthCookie = (res, token) => {
@@ -66,4 +67,12 @@ export const getUserProfile = asyncHandler(async (req, res, next) => {
   // req.user is attached by the 'protect' middleware
   const user = await userService.findUserProfileById(req.user.id);
   res.status(200).json({ success: true, status: 'success', data: { user } });
+});
+
+// Public session probe that never errors: returns authenticated: false (200) when logged out
+export const getSession = asyncHandler(async (req, res, next) => {
+  const token = req.cookies?.jwt;
+  const user = await getSessionUserFromToken(token);
+  if (!user) return res.status(200).json({ success: true, authenticated: false });
+  return res.status(200).json({ success: true, authenticated: true, data: { user } });
 });

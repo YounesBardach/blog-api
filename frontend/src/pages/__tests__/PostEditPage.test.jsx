@@ -49,14 +49,13 @@ describe('PostEditPage', () => {
     vi.clearAllMocks();
     user = userEvent.setup();
 
-    // Mock authenticated admin user
+    // Mock authenticated admin user via session probe
     api.get.mockImplementation((url) => {
-      if (url === '/users/profile') {
+      if (url === '/users/session') {
         return Promise.resolve({
           data: {
-            data: {
-              user: { id: 1, username: 'admin', role: 'ADMIN' },
-            },
+            authenticated: true,
+            data: { user: { id: 1, username: 'admin', role: 'ADMIN' } },
           },
         });
       }
@@ -193,14 +192,8 @@ describe('PostEditPage', () => {
   it('should show error for unauthenticated user', async () => {
     // Mock unauthenticated user
     api.get.mockImplementation((url) => {
-      if (url === '/users/profile') {
-        return Promise.resolve({
-          data: {
-            data: {
-              user: null,
-            },
-          },
-        });
+      if (url === '/users/session') {
+        return Promise.resolve({ data: { authenticated: false } });
       }
       if (url === '/posts/1') {
         return Promise.resolve({ data: { data: { post: testPost } } });
@@ -218,13 +211,9 @@ describe('PostEditPage', () => {
   it('should show error for non-admin user', async () => {
     // Mock regular user (non-admin)
     api.get.mockImplementation((url) => {
-      if (url === '/users/profile') {
+      if (url === '/users/session') {
         return Promise.resolve({
-          data: {
-            data: {
-              user: { id: 1, username: 'user', role: 'USER' },
-            },
-          },
+          data: { authenticated: true, data: { user: { id: 1, username: 'user', role: 'USER' } } },
         });
       }
       if (url === '/posts/1') {
