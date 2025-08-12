@@ -38,11 +38,11 @@ const RegisterPage = () => {
       });
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       showSuccessToast('Registration successful! Welcome to the blog.');
       // Trigger auth state refresh and redirect
-      login();
-      navigate('/profile');
+      await login();
+      navigate('/profile', { replace: true });
     },
     onError: (error) => {
       showErrorToast(error);

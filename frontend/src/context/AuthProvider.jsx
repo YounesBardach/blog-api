@@ -44,9 +44,10 @@ export const AuthProvider = ({ children }) => {
   });
 
   // Helper functions exposed via context
-  const login = () => {
-    // Invalidate to re-run /users/session and pick up the new auth cookie
-    queryClient.invalidateQueries({ queryKey: ['session'] });
+  const login = async () => {
+    // Invalidate and actively refetch the session so user is set before navigation
+    await queryClient.invalidateQueries({ queryKey: ['session'] });
+    await queryClient.refetchQueries({ queryKey: ['session'] });
   };
 
   const logout = () => {

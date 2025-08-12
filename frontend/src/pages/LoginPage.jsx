@@ -26,10 +26,10 @@ const LoginPage = () => {
       const response = await api.post('/users/login', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       showSuccessToast('Login successful! Welcome back.');
-      login();
-      navigate('/profile');
+      await login();
+      navigate('/profile', { replace: true });
     },
     onError: (error) => {
       showErrorToast(error);

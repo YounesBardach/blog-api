@@ -41,7 +41,7 @@ const AuthConsumer = () => {
 
 describe('AuthProvider', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it('shows loading while profile is fetching', async () => {
@@ -70,7 +70,7 @@ describe('AuthProvider', () => {
   it('login invalidates profile and refetches', async () => {
     const first = { data: { authenticated: true, data: { user: { id: 1, username: 'old' } } } };
     const second = { data: { authenticated: true, data: { user: { id: 1, username: 'new' } } } };
-    api.get.mockResolvedValueOnce(first).mockResolvedValueOnce(second);
+    api.get.mockResolvedValueOnce(first).mockResolvedValue(second);
 
     const userEv = userEvent.setup();
     renderWithQueryClient(
@@ -79,9 +79,9 @@ describe('AuthProvider', () => {
       </AuthProvider>
     );
 
-    await screen.findByText('old');
+    await waitFor(() => expect(screen.getByTestId('name').textContent).toBe('old'));
     await userEv.click(screen.getByText('login'));
-    await screen.findByText('new');
+    await waitFor(() => expect(screen.getByTestId('name').textContent).toBe('new'));
   });
 
   it('logout posts, clears user and shows success toast', async () => {
