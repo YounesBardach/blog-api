@@ -16,7 +16,7 @@ async function main() {
     email: 'user@example.com',
     username: 'user',
     password: 'User123!',
-    role: 'USER',
+    role: 'READER',
   };
 
   const existingAdmin = await prisma.user.findFirst({
