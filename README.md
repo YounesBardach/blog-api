@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="YOUR_IMAGE_URL" alt="Blog API Banner" width="900" />
+  <img src="https://i.postimg.cc/BvwrbZNC/blog-api-github-banner.png" alt="Blog API Banner" width="900" />
 </p>
 # Blog API & React Frontend (Full‑Stack Monorepo)
 
