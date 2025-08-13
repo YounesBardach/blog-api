@@ -195,7 +195,7 @@ npm run format
 
 <details>
 <summary><strong>Dev Notes</strong></summary>
-- Node 20+ is required (matches dependency engines, e.g., `react-router-dom` 7.x).
+Node 20+ is required (matches dependency engines, e.g., `react-router-dom` 7.x).
 </details>
 
 ---
