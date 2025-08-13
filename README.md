@@ -1,6 +1,7 @@
 <p align="center">
   <img src="https://i.postimg.cc/BvwrbZNC/blog-api-github-banner.png" alt="Blog API Banner" width="900" />
 </p>
+
 # Blog API & React Frontend (Full‑Stack Monorepo)
 
 A full‑stack blog application with an Express + Prisma backend and a React +
