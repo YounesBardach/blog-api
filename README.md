@@ -73,7 +73,7 @@ npm run dev
 
 - Backend: http://localhost:5000  
 - Frontend: http://localhost:5173 *(Vite will pick a free port if 5173 is busy)*  
-- Swagger (API docs): http://localhost:5000/api/docs
+- Swagger (API docs): http://localhost:5000/api-docs
 
 ---
 
