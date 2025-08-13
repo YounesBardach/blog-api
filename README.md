@@ -123,7 +123,7 @@ VITE_API_URL=http://localhost:5000
 ---
 
 ## Tech stack
-- **Backend:** Node.js, Express, Prisma (PostgreSQL), express-validator, Helmet, `csurf`, JWT, Winston, Swagger  
+- **Backend:** Node.js, Express, Prisma (PostgreSQL), express-validator, Helmet, csurf, JWT, Winston, Swagger  
 - **Frontend:** React, React Router, React Query, React Hook Form, Tailwind CSS, Vite  
 - **Testing:** Vitest, Testing Library, Supertest (backend), jsdom (frontend)  
 - **Tooling:** ESLint (flat config) + Prettier, npm workspaces, concurrently
