@@ -195,10 +195,6 @@ npm run format
 
 <details>
 <summary><strong>Dev Notes</strong></summary>
-
-- You may see `401` logs for `GET /users/profile` when logged-out—this is expected as a lightweight session check.  
-  To remove red lines entirely, switch to a public `GET /api/session` that returns `{ authenticated: false }` with HTTP 200.
-
 - Node 20+ is required (matches dependency engines, e.g., `react-router-dom` 7.x).
 </details>
 
