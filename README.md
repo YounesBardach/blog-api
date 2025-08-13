@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="YOUR_IMAGE_URL" alt="Blog API Banner" width="900" />
+</p>
 # Blog API & React Frontend (Full‑Stack Monorepo)
 
 A full‑stack blog application with an Express + Prisma backend and a React +
